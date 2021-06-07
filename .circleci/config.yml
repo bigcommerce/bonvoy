@@ -3,13 +3,20 @@ version: 2.1
 orbs:
   ci: bigcommerce/internal@volatile
 
-jobs:
-  build:
+executors:
+  go:
+    working_directory: /go/src/github.com/bigcommerce/bonvoy
     docker:
       - image: circleci/golang:1.16
-    working_directory: /go/src/github.com/bigcommerce/bonvoy
+
+jobs:
+  build:
+    executor: go
+    steps:
+      - ci/pre-setup
+      - run: make deps build
+  test:
+    executor: go
     steps:
       - ci/pre-setup
       - run: make test
-#      - run: make lint
-      - run: make deps build
