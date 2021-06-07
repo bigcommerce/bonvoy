@@ -7,10 +7,9 @@ type Runner interface {
 }
 
 func All() []Runner {
-	cmds := []Runner{
+	return []Runner{
 		BuildListeners(),
 		BuildVersion(),
 		BuildExpiredCertificatesCommand(),
 	}
-	return cmds
 }
