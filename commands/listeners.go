@@ -46,7 +46,7 @@ func (g *ListenersCommand) Run() error {
 	fmt.Println("LISTENERS:")
 	fmt.Println("----------------------------------------------------------------------")
 	for _, listener := range listeners {
-		fmt.Printf("%s:\t\t%s\n", listener.Name, listener.TargetAddress)
+		fmt.Printf("%s: %s\n", listener.Name, listener.TargetAddress)
 	}
 	return nil
 }
