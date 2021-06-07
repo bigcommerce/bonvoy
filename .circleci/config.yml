@@ -15,6 +15,11 @@ jobs:
     steps:
       - ci/pre-setup
       - run: make test
+  test-unit:
+    executor: go
+    steps:
+      - ci/pre-setup
+      - run: make test-unit
   build:
     executor: go
     steps:
