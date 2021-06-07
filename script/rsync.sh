@@ -39,4 +39,4 @@ rsync -zarh \
     ./ \
     "${USER}@${IP}:/opt/bonvoy"
 
-gcloud compute ssh "${GCE_CLUSTER_NAME}" --zone "${ZONE}" --project "${PROJECT}" --internal-ip --ssh-flag="-A" --ssh-flag="-t" --command "sudo /opt/bonvoy/script/build-and-test.sh $TARGET"
+gcloud compute ssh "${GCE_CLUSTER_NAME}" --zone "${ZONE}" --project "${PROJECT}" --internal-ip --ssh-flag="-A" --ssh-flag="-t" --command "sudo /opt/bonvoy/script/build-remote.sh $TARGET"

@@ -8,8 +8,14 @@ Connect and Nomad environment.
 There are various commands you can run. Usually you are required to pass the
 name of the service you want to query the sidecar for.
 
-### List all Envoy Listeners:
+### List all Envoy Listeners
 
 ```bash
 bonvoy listeners auth-grpc
+```
+
+### Show all Expired Certificates
+
+```bash
+bonvoy certs-expired auth-grpc
 ```

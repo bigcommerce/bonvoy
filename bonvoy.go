@@ -2,6 +2,7 @@ package main
 
 import (
 	"bonvoy/commands"
+	"bonvoy/config"
 	"fmt"
 	"os"
 )
@@ -23,6 +24,7 @@ func root(args[] string) error {
 }
 
 func main() {
+	config.Load()
 	if err := root(os.Args[1:]); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

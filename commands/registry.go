@@ -10,6 +10,7 @@ func All() []Runner {
 	cmds := []Runner{
 		BuildListeners(),
 		BuildVersion(),
+		BuildExpiredCertificatesCommand(),
 	}
 	return cmds
 }

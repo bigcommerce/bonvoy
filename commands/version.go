@@ -13,10 +13,9 @@ type VersionCommand struct {
 
 func BuildVersion() *VersionCommand {
 	gc := &VersionCommand{
-		fs: flag.NewFlagSet("listeners", flag.ContinueOnError),
+		fs: flag.NewFlagSet("version", flag.ContinueOnError),
 	}
 	gc.fs.Arg(0)
-	//gc.fs.StringVar(&gc.name, "service", "", "name of the service whose sidecar to enter")
 	return gc
 }
 
