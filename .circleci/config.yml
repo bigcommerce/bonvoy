@@ -10,13 +10,20 @@ executors:
       - image: circleci/golang:1.16
 
 jobs:
-  build:
-    executor: go
-    steps:
-      - ci/pre-setup
-      - run: make deps build
   test:
     executor: go
     steps:
       - ci/pre-setup
       - run: make test
+  build:
+    executor: go
+    steps:
+      - ci/pre-setup
+      - run: make deps build
+
+workflows:
+  version: 2
+  full:
+    jobs:
+      - test
+      - build
