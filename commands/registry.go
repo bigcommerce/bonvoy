@@ -11,5 +11,6 @@ func All() []Runner {
 		BuildListeners(),
 		BuildVersion(),
 		BuildExpiredCertificatesCommand(),
+		BuildSetLogLevelCommand(),
 	}
 }
