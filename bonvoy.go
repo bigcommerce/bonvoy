@@ -24,8 +24,6 @@ func root(args[] string) error {
 	return fmt.Errorf("Unknown subcommand: %s", subcommand)
 }
 
-
-
 func main() {
 	config.Load()
 	flag.CommandLine.SetOutput(os.Stdout)
