@@ -29,6 +29,7 @@ func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("USAGE: bonvoy" +
 			"\n\tversion - Display bonvoy version" +
+			"\n\tlog-level [service] (level) - Set log level for a sidecar" +
 			"\n\tcerts-expired - Display expired certificates compared to Consul agent for a sidecar" +
 			"\n\tlisteners [service] - Display all listeners for sidecar")
 	} else if err := root(os.Args[1:]); err != nil {

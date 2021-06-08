@@ -20,12 +20,10 @@ func GetDefaultHost() string {
 func NewFromServiceName(name string) Instance {
 	dci := docker.NewClient()
 	pid := dci.GetEnvoyPid(name)
-	nse := nsenter.NewClient(pid)
-
 	return Instance{
 		Address: GetDefaultHost(),
 		Pid: pid,
 		docker: dci,
-		nsenter: nse,
+		nsenter: nsenter.NewClient(pid),
 	}
 }

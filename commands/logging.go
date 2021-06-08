@@ -40,7 +40,7 @@ func (g *SetLogLevelCommand) Run() error {
 	if level == "" {
 		level = g.fs.Arg(1)
 		if level == "" {
-			level = SelectLogLevel()
+			level = g.SelectLogLevel()
 		}
 	}
 
@@ -49,7 +49,7 @@ func (g *SetLogLevelCommand) Run() error {
 	return nil
 }
 
-func SelectLogLevel() string {
+func (g *SetLogLevelCommand) SelectLogLevel() string {
 	prompt := promptui.Select{
 		Label: "Please Select a Log Level",
 		Items: []string{"debug", "info", "warning", "error"},
