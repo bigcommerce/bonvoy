@@ -14,10 +14,11 @@ build:
 
 deps:
 	@go mod tidy
+	@go get -u github.com/rakyll/gotest
 
 test:
-	go test -v $$(go list ./... | grep -v vendor/) -tags=integration
+	gotest -v $$(go list ./... | grep -v vendor/) -tags=integration
 
 test-unit:
-	go test $$(go list ./... | grep -v vendor/)
+	gotest $$(go list ./... | grep -v vendor/)
 

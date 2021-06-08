@@ -3,7 +3,6 @@ package main
 import (
 	"bonvoy/commands"
 	"bonvoy/config"
-	"flag"
 	"fmt"
 	"os"
 )
@@ -26,7 +25,6 @@ func root(args[] string) error {
 
 func main() {
 	config.Load()
-	flag.CommandLine.SetOutput(os.Stdout)
 	if len(os.Args) < 2 {
 		fmt.Println("USAGE: bonvoy" +
 			"\n\tversion - Display bonvoy version" +

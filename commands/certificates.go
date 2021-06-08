@@ -13,12 +13,14 @@ import (
 
 type ExpiredCertificatesCommand struct {
 	fs *flag.FlagSet
+	consul consul.Client
 	name string
 }
 
 func BuildExpiredCertificatesCommand() *ExpiredCertificatesCommand {
 	gc := &ExpiredCertificatesCommand{
 		fs: flag.NewFlagSet("certs-expired", flag.ContinueOnError),
+		consul: consul.NewClient(),
 	}
 	gc.fs.Arg(0)
 	return gc
@@ -34,6 +36,10 @@ func (g *ExpiredCertificatesCommand) Init(args []string) error {
 
 func (g *ExpiredCertificatesCommand) Run() error {
 	var name = g.name
+	if name == "" {
+		name = g.fs.Arg(0)
+	}
+
 	var cli = docker.NewClient()
 	var pid = envoy.GetPid(cli, name)
 	config := nsenter.BuildConfig(pid)
@@ -43,7 +49,7 @@ func (g *ExpiredCertificatesCommand) Run() error {
 		for _, c := range certs.CertificateChain {
 			a := strings.Split(c.SubjectAltNames[0].Uri, "/")
 			svc := a[len(a)-1]
-			leaf := consul.AgentLeafCaCertificate(svc)
+			leaf := g.consul.Agent().GetConnectLeafCaCertificate(svc)
 
 			if c.ExpirationTime != leaf.ValidBefore {
 				fmt.Println(svc)

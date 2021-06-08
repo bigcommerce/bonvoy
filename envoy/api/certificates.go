@@ -34,7 +34,7 @@ type CertificateChain struct {
 }
 
 func GetCertificates(config nsenter.Config) CertsResponse {
-	rawJson, stderr, err := config.Execute("curl", "-s", envoy.GetHost() + "certs")
+	rawJson, stderr, err := config.Execute("curl", "-s", envoy.GetHost() + "/certs")
 	jsonData := []byte(strings.Trim(rawJson, " "))
 
 	var response CertsResponse

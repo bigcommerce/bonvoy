@@ -13,7 +13,7 @@ type Listener struct {
 }
 
 func GetListeners(config nsenter.Config) []Listener {
-	stdout, stderr, err := config.Execute("curl", envoy.GetHost() + "listeners")
+	stdout, stderr, err := config.Execute("curl", envoy.GetHost() + "/listeners")
 	if err != nil {
 		fmt.Println(stderr)
 		panic(err)

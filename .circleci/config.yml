@@ -8,18 +8,20 @@ executors:
     working_directory: /go/src/github.com/bigcommerce/bonvoy
     docker:
       - image: circleci/golang:1.16
+        environment:
+          DOCKER_API_VERSION: 1.39
 
 jobs:
   test-unit:
     executor: go
     steps:
       - ci/pre-setup
-      - run: make test-unit
+      - run: make deps test-unit
   test:
     executor: go
     steps:
       - ci/pre-setup
-      - run: make test
+      - run: make deps test
   build:
     executor: go
     steps:
