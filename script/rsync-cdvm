@@ -24,8 +24,8 @@ IP=$(gcloud compute instances list --project="${PROJECT}" --filter="name:${GCE_C
 
 # rsync the files to the target destination. Using `sudo rsync` since the code is
 # owned by root on the VM.
-rsync -zarh \
-    -e "ssh -i ~/.ssh/google_compute_engine -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/google_compute_known_hosts" \
+rsync -e "ssh -i ~/.ssh/google_compute_engine -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/google_compute_known_hosts" \
+    --delete --recursive --archive --compress --human-readable --progress \
     --rsync-path="sudo rsync" \
     --exclude '.DS_Store' \
     --exclude '.idea' \
@@ -39,4 +39,4 @@ rsync -zarh \
     ./ \
     "${USER}@${IP}:/opt/bonvoy"
 
-gcloud compute ssh "${GCE_CLUSTER_NAME}" --zone "${ZONE}" --project "${PROJECT}" --internal-ip --ssh-flag="-A" --ssh-flag="-t" --command "sudo /opt/bonvoy/script/build-remote.sh $TARGET"
+gcloud compute ssh "${GCE_CLUSTER_NAME}" --zone "${ZONE}" --project "${PROJECT}" --internal-ip --ssh-flag="-A" --ssh-flag="-t" --command "sudo /opt/bonvoy/script/build-remote $TARGET"

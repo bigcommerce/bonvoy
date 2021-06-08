@@ -2,10 +2,7 @@ package commands
 
 import (
 	"bonvoy/consul"
-	"bonvoy/docker"
 	"bonvoy/envoy"
-	envoyApi "bonvoy/envoy/api"
-	"bonvoy/nsenter"
 	"flag"
 	"fmt"
 	"strings"
@@ -40,10 +37,8 @@ func (g *ExpiredCertificatesCommand) Run() error {
 		name = g.fs.Arg(0)
 	}
 
-	var cli = docker.NewClient()
-	var pid = envoy.GetPid(cli, name)
-	config := nsenter.BuildConfig(pid)
-	data := envoyApi.GetCertificates(config)
+	e := envoy.NewFromServiceName(name)
+	data := e.Certificates().Get()
 
 	for _, certs := range data.Certificates {
 		for _, c := range certs.CertificateChain {
@@ -53,7 +48,7 @@ func (g *ExpiredCertificatesCommand) Run() error {
 
 			if c.ExpirationTime != leaf.ValidBefore {
 				fmt.Println(svc)
-				fmt.Println("  Envoy Process ID:", pid)
+				fmt.Println("  Envoy Process ID:", e.Pid)
 				fmt.Printf("  Envoy Certificate Expiry: %s (%s days)\n", c.ExpirationTime, c.DaysUntilExpiration)
 				fmt.Println("  Consul Agent Certificate Expiry: ", leaf.ValidBefore)
 			}

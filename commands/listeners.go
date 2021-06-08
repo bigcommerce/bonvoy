@@ -1,10 +1,7 @@
 package commands
 
 import (
-	"bonvoy/docker"
 	"bonvoy/envoy"
-	envoyApi "bonvoy/envoy/api"
-	"bonvoy/nsenter"
 	"flag"
 	"fmt"
 )
@@ -38,10 +35,8 @@ func (g *ListenersCommand) Run() error {
 		name = g.fs.Arg(0)
 	}
 
-	cli := docker.NewClient()
-	pid := envoy.GetPid(cli, name)
-	config := nsenter.BuildConfig(pid)
-	listeners := envoyApi.GetListeners(config)
+	e := envoy.NewFromServiceName(name)
+	listeners := e.Listeners().Get()
 
 	fmt.Println("LISTENERS:")
 	fmt.Println("----------------------------------------------------------------------")

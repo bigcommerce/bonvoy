@@ -1,10 +1,7 @@
 package commands
 
 import (
-	"bonvoy/docker"
 	"bonvoy/envoy"
-	envoyApi "bonvoy/envoy/api"
-	"bonvoy/nsenter"
 	"flag"
 	"fmt"
 	"github.com/manifoldco/promptui"
@@ -47,10 +44,8 @@ func (g *SetLogLevelCommand) Run() error {
 		}
 	}
 
-	cli := docker.NewClient()
-	pid := envoy.GetPid(cli, name)
-	config := nsenter.BuildConfig(pid)
-	envoyApi.SetLogLevel(config, level)
+	e := envoy.NewFromServiceName(name)
+	e.Logging().SetLevel(level)
 	return nil
 }
 
