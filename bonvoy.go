@@ -24,6 +24,7 @@ func root(args[] string) error {
 }
 
 func main() {
+	_ = os.Setenv("DOCKER_API_VERSION", "1.39")
 	config.Load()
 	if len(os.Args) < 2 {
 		fmt.Println("USAGE: bonvoy" +
