@@ -2,4 +2,4 @@
 
 set -eo pipefail
 
-make test
+gotest -v $(go list ./... | grep -v vendor/)

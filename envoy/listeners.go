@@ -27,8 +27,10 @@ type Listener struct {
 	TargetAddress string
 }
 
-func (l *Listeners) Get() []Listener {
-	stdout := l.i.nsenter.Curl(l.endpoints.list)
+func (l *Listeners) Get() ([]Listener, error) {
+	stdout, err := l.i.nsenter.Curl(l.endpoints.list)
+	if err != nil { return []Listener{}, err }
+
 	data := strings.Split(stdout, "\n")
 	var listeners []Listener
 	for _, str := range data {
@@ -40,5 +42,5 @@ func (l *Listeners) Get() []Listener {
 			})
 		}
 	}
-	return listeners
+	return listeners, nil
 }

@@ -2,7 +2,6 @@ package envoy
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 )
 
@@ -13,27 +12,29 @@ type Server struct {
 
 type ServerEndpoints struct {
 	info string
+	memory string
 }
 func (i *Instance) Server() *Server {
 	return &Server{
 		i: i,
 		endpoints: ServerEndpoints{
 			info: i.Address + "/server_info",
+			memory: i.Address + "/memory",
 		},
 	}
 }
 
-func (l *Server) Info() ServerInfoJson {
-	rawJson := l.i.nsenter.Curl("-s", l.endpoints.info)
+func (l *Server) Info() (ServerInfoJson, error) {
+	rawJson, err := l.i.nsenter.Curl("-s", l.endpoints.info)
+	if err != nil { return ServerInfoJson{}, err }
+
 	jsonData := []byte(strings.Trim(rawJson, " "))
 
 	var response ServerInfoJson
-	err := json.Unmarshal(jsonData, &response)
-	if err != nil {
-		fmt.Println(err)
-		panic(err)
-	}
-	return response
+	err = json.Unmarshal(jsonData, &response)
+	if err != nil { return ServerInfoJson{}, err }
+
+	return response, nil
 }
 
 type ServerInfoJson struct {
@@ -69,4 +70,28 @@ type ServerNode struct {
 type ServerMetadata struct {
 	Namespace string    `json:"namespace"`
 	EnvoyVersion string `json:"envoy_version"`
+}
+
+// /memory
+
+func (l *Server) Memory() (ServerMemoryJson, error) {
+	rawJson, err := l.i.nsenter.Curl("-s", l.endpoints.memory)
+	if err != nil { return ServerMemoryJson{}, err }
+
+	jsonData := []byte(strings.Trim(rawJson, " "))
+
+	var response ServerMemoryJson
+	err = json.Unmarshal(jsonData, &response)
+	if err != nil { return ServerMemoryJson{}, err }
+
+	return response, nil
+}
+
+type ServerMemoryJson struct {
+	Allocated string 			`json:"allocated"`
+	HeapSize string				`json:"heap_size"`
+	PageHeapUnmapped string 	`json:"pageheap_unmapped"`
+	PageHeapFree string 		`json:"pageheap_free"`
+	TotalThreadCache string 	`json:"total_thread_cache"`
+	TotalPhysicalBytes string 	`json:"total_physical_bytes"`
 }

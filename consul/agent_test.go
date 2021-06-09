@@ -38,7 +38,10 @@ func TestClient_GetConnectLeafCaCertificate(t *testing.T) {
 		CreateIndex: 271994,
 		ModifyIndex: 271994,
 	}
-	res := client.GetConnectLeafCaCertificate("auth-grpc")
+	res, err := client.GetConnectLeafCaCertificate("auth-grpc")
+	if err != nil {
+		t.Error(err)
+	}
 	if res.Service != "auth-grpc" {
 		t.Error("Failed to return proper Service name")
 	}

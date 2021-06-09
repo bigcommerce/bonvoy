@@ -46,16 +46,17 @@ type ExpiredCertificatesController struct {
 
 func (c *ExpiredCertificatesController) Run() error {
 	e, err := envoy.NewFromServiceName(c.ServiceName)
-	if err != nil {
-		return err
-	}
-	data := e.Certificates().Get()
+	if err != nil { return err }
+
+	data, err := e.Certificates().Get()
+	if err != nil { return err }
 
 	for _, certs := range data.Certificates {
 		for _, cert := range certs.CertificateChain {
 			a := strings.Split(cert.SubjectAltNames[0].Uri, "/")
 			svc := a[len(a)-1]
-			leaf := c.Consul.Agent().GetConnectLeafCaCertificate(svc)
+			leaf, lErr := c.Consul.Agent().GetConnectLeafCaCertificate(svc)
+			if lErr != nil { return lErr }
 
 			if cert.ExpirationTime != leaf.ValidBefore {
 				fmt.Println(svc)

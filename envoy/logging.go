@@ -21,8 +21,10 @@ func (i *Instance) Logging() *Logging {
 	}
 }
 
-func (l *Logging) SetLevel(level string) bool {
-	result := l.i.nsenter.Curl("-X", "POST", l.endpoints.logging + "?level="+level)
+func (l *Logging) SetLevel(level string) error {
+	result, err := l.i.nsenter.Curl("-X", "POST", l.endpoints.logging + "?level="+level)
+	if err != nil { return err }
+
 	fmt.Println(result)
-	return true
+	return nil
 }

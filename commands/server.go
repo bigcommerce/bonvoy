@@ -18,10 +18,13 @@ func (r *Registry) Server() *Server {
 		Short: "Envoy server commands",
 	}
 	cmd.AddCommand(r.BuildServerInfoCommand())
+	cmd.AddCommand(r.BuildServerMemoryCommand())
 	return &Server{
 		Command: cmd,
 	}
 }
+
+// server info
 
 func (r *Registry) BuildServerInfoCommand() *cobra.Command {
 	return &cobra.Command{
@@ -44,10 +47,11 @@ type ServerInfoController struct {
 
 func (s *ServerInfoController) Run() error {
 	e, err := envoy.NewFromServiceName(s.ServiceName)
-	if err != nil {
-		return err
-	}
-	response := e.Server().Info()
+	if err != nil { return err }
+
+	response, err  := e.Server().Info()
+	if err != nil { return err }
+
 	s.DisplayOutput(response)
 	return nil
 }
@@ -108,4 +112,51 @@ func (s *ServerInfoController) DisplayOutput(data envoy.ServerInfoJson) {
 	table.AppendBulk(d)
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
 	table.Render()
+}
+
+// server memory
+
+type ServerMemoryController struct {
+	ServiceName string
+}
+func (r *Registry) BuildServerMemoryCommand() *cobra.Command {
+	return &cobra.Command{
+		Use: "memory",
+		Short: "Display envoy memory information",
+		Long:  `Display memory usage information about the envoy sidecar`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			controller := ServerMemoryController{
+				ServiceName: args[0],
+			}
+			return controller.Run()
+		},
+	}
+}
+
+func (s *ServerMemoryController) Run() error {
+	e, err := envoy.NewFromServiceName(s.ServiceName)
+	if err != nil { return err }
+
+	data, err  := e.Server().Memory()
+	if err != nil { return err }
+
+	fmt.Println("----------------------")
+	fmt.Println("- Server Memory Info -")
+	fmt.Println("----------------------")
+	d := [][]string{
+		{"Allocated", data.Allocated},
+		{"Heap Size", data.HeapSize},
+		{"Page Heap (Unmapped)", data.PageHeapUnmapped},
+		{"Page Heap (Free)", data.PageHeapFree},
+		{"Total Physical Bytes", data.TotalPhysicalBytes},
+		{"Total Thread Cache", data.TotalThreadCache},
+	}
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetBorder(false)
+	table.SetTablePadding("\t")
+	table.AppendBulk(d)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.Render()
+	return nil
 }

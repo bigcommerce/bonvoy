@@ -33,10 +33,11 @@ type ListenersController struct {
 
 func (s *ListenersController) Run() error {
 	e, err := envoy.NewFromServiceName(s.ServiceName)
-	if err != nil {
-		return err
-	}
-	listeners := e.Listeners().Get()
+	if err != nil { return err }
+
+	listeners, err := e.Listeners().Get()
+	if err != nil { return err }
+
 	fmt.Println("LISTENERS:")
 	fmt.Println("----------------------------------------------------------------------")
 	for _, listener := range listeners {

@@ -32,9 +32,8 @@ func (c *Client) GetEnvoyPid(name string) (int, error) {
 		All: true,
 		Filters: filter,
 	})
-	if err != nil {
-		return 0, err
-	}
+	if err != nil { return 0, err }
+
 	var containerNames []string
 	for _, container := range containers {
 		containerNames = append(containerNames, container.Names...)
@@ -42,7 +41,9 @@ func (c *Client) GetEnvoyPid(name string) (int, error) {
 
 	desiredName := ""
 	if len(containerNames) > 1 {
-		desiredName = c.SelectDesiredContainer(containerNames)
+		desiredName, err = c.SelectDesiredContainer(containerNames)
+		if err != nil { return 0, err }
+
 	} else if len(containerNames) == 1 {
 		desiredName = containerNames[0]
 	} else {
@@ -64,15 +65,14 @@ func (c *Client) GetEnvoyPid(name string) (int, error) {
 	return container.State.Pid, nil
 }
 
-func (c *Client) SelectDesiredContainer(names []string) string {
+func (c *Client) SelectDesiredContainer(names []string) (string, error) {
 	prompt := promptui.Select{
 		Label: "Please Select Sidecar Container",
 		Items: names,
 	}
 	_, desiredName, err := prompt.Run()
 	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
-		panic(err)
+		return "", err
 	}
-	return desiredName
+	return desiredName, nil
 }

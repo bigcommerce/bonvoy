@@ -17,8 +17,8 @@ deps:
 	@go get -u github.com/rakyll/gotest
 
 test:
-	gotest -v $$(go list ./... | grep -v vendor/) -tags=integration
+	@gotest -v $$(go list ./... | grep -v vendor/) -tags=integration
 
 test-unit:
-	gotest $$(go list ./... | grep -v vendor/)
+	@gotest $$(go list ./... | grep -v vendor/)
 

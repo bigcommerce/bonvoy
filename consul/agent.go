@@ -25,17 +25,19 @@ type ConnectLeafCaCertificate struct {
 	ModifyIndex int `json:"ModifyIndex"`
 }
 
-func (a *Agent) GetConnectLeafCaCertificate(svc string) ConnectLeafCaCertificate {
+func (a *Agent) GetConnectLeafCaCertificate(svc string) (ConnectLeafCaCertificate, error) {
 	return a.c.GetConnectLeafCaCertificate(svc)
 }
 
-func (c *Client) GetConnectLeafCaCertificate(svc string) ConnectLeafCaCertificate {
-	r, err := http.Get(c.address + "/v1/agent/connect/ca/leaf/" + svc)
-	if err != nil {
-		panic(err)
-	}
+func (c *Client) GetConnectLeafCaCertificate(svc string) (ConnectLeafCaCertificate, error) {
 	var response ConnectLeafCaCertificate
+
+	r, err := http.Get(c.address + "/v1/agent/connect/ca/leaf/" + svc)
+	if err != nil { return response, nil }
+
 	defer r.Body.Close()
 	err = json.NewDecoder(r.Body).Decode(&response)
-	return response
+	if err != nil { return response, nil }
+
+	return response, nil
 }

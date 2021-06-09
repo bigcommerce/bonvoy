@@ -2,7 +2,6 @@ package envoy
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 )
 
@@ -48,15 +47,15 @@ type CertificateChain struct {
 	SubjectAltNames []SubjectAltName `json:"subject_alt_names"`
 }
 
-func (c *Certificates) Get() CertsResponse {
-	rawJson := c.i.nsenter.Curl("-s", c.endpoints.list)
+func (c *Certificates) Get() (CertsResponse, error) {
+	rawJson, err := c.i.nsenter.Curl("-s", c.endpoints.list)
+
 	jsonData := []byte(strings.Trim(rawJson, " "))
 
 	var response CertsResponse
-	err := json.Unmarshal(jsonData, &response)
+	err = json.Unmarshal(jsonData, &response)
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return CertsResponse{}, err
 	}
-	return response
+	return response, nil
 }

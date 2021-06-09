@@ -54,11 +54,9 @@ func (c *SetLogLevelController) Run() error {
 		desiredLogLevel = c.SelectLogLevel()
 	}
 	e, err := envoy.NewFromServiceName(c.ServiceName)
-	if err != nil {
-		return err
-	}
-	e.Logging().SetLevel(desiredLogLevel)
-	return nil
+	if err != nil { return err }
+
+	return e.Logging().SetLevel(desiredLogLevel)
 }
 
 func (c *SetLogLevelController) SelectLogLevel() string {

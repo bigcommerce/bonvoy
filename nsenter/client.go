@@ -2,7 +2,6 @@ package nsenter
 
 import (
 	"context"
-	"fmt"
 	"github.com/Devatoria/go-nsenter"
 )
 
@@ -20,15 +19,14 @@ func NewClient(pid int) Client {
 	}
 }
 
-func (c *Client) Exec(program string, args ...string) string {
+func (c *Client) Exec(program string, args ...string) (string, error) {
 	stdout, stderr, err := c.config.ExecuteContext(context.Background(), program, args...)
 	if err != nil {
-		fmt.Println(stderr)
-		panic(err)
+		return stderr, err
 	}
-	return stdout
+	return stdout, nil
 }
 
-func (c *Client) Curl(args ...string) string {
+func (c *Client) Curl(args ...string) (string, error) {
 	return c.Exec("curl", args...)
 }
