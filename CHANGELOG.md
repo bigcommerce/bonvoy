@@ -2,6 +2,10 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+## 0.0.3
+
+* Ensure query for containers does not include dead containers
+
 ## 0.0.2
 
 * Add `server memory` command to display server memory information

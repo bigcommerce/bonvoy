@@ -29,7 +29,7 @@ func (c *Client) GetEnvoyPid(name string) (int, error) {
 	filter.Add("name", "connect-proxy-" + name)
 
 	containers, err := c.cli.ContainerList(context.Background(), types.ContainerListOptions{
-		All: true,
+		All: false,
 		Filters: filter,
 	})
 	if err != nil { return 0, err }
