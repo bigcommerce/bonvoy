@@ -17,13 +17,17 @@ func GetDefaultHost() string {
 	return viper.GetString("ENVOY_HOST")
 }
 
-func NewFromServiceName(name string) Instance {
+func NewFromServiceName(name string) (Instance, error) {
 	dci := docker.NewClient()
-	pid := dci.GetEnvoyPid(name)
-	return Instance{
-		Address: GetDefaultHost(),
-		Pid: pid,
-		docker: dci,
-		nsenter: nsenter.NewClient(pid),
+	pid, err := dci.GetEnvoyPid(name)
+	if err != nil {
+		return Instance{}, err
+	} else {
+		return Instance{
+			Address: GetDefaultHost(),
+			Pid: pid,
+			docker: dci,
+			nsenter: nsenter.NewClient(pid),
+		}, nil
 	}
 }

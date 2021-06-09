@@ -44,7 +44,10 @@ func (g *SetLogLevelCommand) Run() error {
 		}
 	}
 
-	e := envoy.NewFromServiceName(name)
+	e, err := envoy.NewFromServiceName(name)
+	if err != nil {
+		return err
+	}
 	e.Logging().SetLevel(level)
 	return nil
 }

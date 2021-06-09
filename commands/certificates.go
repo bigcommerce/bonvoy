@@ -37,7 +37,10 @@ func (g *ExpiredCertificatesCommand) Run() error {
 		name = g.fs.Arg(0)
 	}
 
-	e := envoy.NewFromServiceName(name)
+	e, err := envoy.NewFromServiceName(name)
+	if err != nil {
+		return err
+	}
 	data := e.Certificates().Get()
 
 	for _, certs := range data.Certificates {

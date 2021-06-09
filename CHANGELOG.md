@@ -2,6 +2,7 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+* Add `server-info` command to display information about the Envoy sidecar
 * Add `log-level` command to set Envoy's log level
 * Restructure for better memory usage and a more closed API
 

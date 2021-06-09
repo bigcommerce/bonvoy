@@ -24,7 +24,7 @@ func NewClient() Client {
 	}
 }
 
-func (c *Client) GetEnvoyPid(name string) int {
+func (c *Client) GetEnvoyPid(name string) (int, error) {
 	filter := filters.NewArgs()
 	filter.Add("name", "connect-proxy-" + name)
 
@@ -33,7 +33,7 @@ func (c *Client) GetEnvoyPid(name string) int {
 		Filters: filter,
 	})
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 	var containerNames []string
 	for _, container := range containers {
@@ -43,8 +43,10 @@ func (c *Client) GetEnvoyPid(name string) int {
 	desiredName := ""
 	if len(containerNames) > 1 {
 		desiredName = c.SelectDesiredContainer(containerNames)
-	} else {
+	} else if len(containerNames) == 1 {
 		desiredName = containerNames[0]
+	} else {
+		return 0, fmt.Errorf("No sidecar found for name: " + name)
 	}
 
 	fmt.Printf("Entering %s\n\n", strings.TrimLeft(desiredName, "/"))
@@ -57,10 +59,9 @@ func (c *Client) GetEnvoyPid(name string) int {
 	}
 	container, err := c.cli.ContainerInspect(context.Background(), desiredId)
 	if err != nil {
-		fmt.Printf("Failed to inspect container %v\n", err)
-		panic(err)
+		return 0, err
 	}
-	return container.State.Pid
+	return container.State.Pid, nil
 }
 
 func (c *Client) SelectDesiredContainer(names []string) string {

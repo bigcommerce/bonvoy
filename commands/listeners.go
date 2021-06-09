@@ -35,7 +35,10 @@ func (g *ListenersCommand) Run() error {
 		name = g.fs.Arg(0)
 	}
 
-	e := envoy.NewFromServiceName(name)
+	e, err := envoy.NewFromServiceName(name)
+	if err != nil {
+		return err
+	}
 	listeners := e.Listeners().Get()
 
 	fmt.Println("LISTENERS:")
