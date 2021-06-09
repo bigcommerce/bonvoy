@@ -8,25 +8,40 @@ import (
 	"strings"
 )
 
-type ExpiredCertificatesController struct {
-	ServiceName string
-	Consul consul.Client
+type Certificates struct {
+	Command *cobra.Command
 }
 
-func BuildExpiredCertificatesController(rootCmd *cobra.Command) {
-	rootCmd.AddCommand(&cobra.Command{
-		Use: "certificates expired",
+func (r *Registry) Certificates() *Certificates {
+	cmd := &cobra.Command{
+		Use: "certificates",
+		Short: "Certificates-related commands",
+	}
+	cmd.AddCommand(r.BuildExpiredCertificatesCommand())
+	return &Certificates{
+		Command: cmd,
+	}
+}
+
+func (r *Registry) BuildExpiredCertificatesCommand() *cobra.Command {
+	return &cobra.Command{
+		Use: "expired",
 		Short: "Show all expired certificates",
 		Long:  `Display all expired sidecar certificates as compared to the local Consul agent`,
-		Args: cobra.MinimumNArgs(2),
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			controller := ExpiredCertificatesController{
-				ServiceName: args[1],
+				ServiceName: args[0],
 				Consul: consul.NewClient(),
 			}
 			return controller.Run()
 		},
-	})
+	}
+}
+
+type ExpiredCertificatesController struct {
+	ServiceName string
+	Consul consul.Client
 }
 
 func (c *ExpiredCertificatesController) Run() error {

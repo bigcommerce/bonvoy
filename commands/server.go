@@ -8,23 +8,38 @@ import (
 	"os"
 )
 
-type ServerInfoController struct {
-	ServiceName string
+type Server struct {
+	Command *cobra.Command
 }
 
-func BuildServerInfoCommand(rootCmd *cobra.Command) {
-	rootCmd.AddCommand(&cobra.Command{
-		Use: "server info",
-		Short: "Envoy server information",
+func (r *Registry) Server() *Server {
+	cmd := &cobra.Command{
+		Use: "server",
+		Short: "Envoy server commands",
+	}
+	cmd.AddCommand(r.BuildServerInfoCommand())
+	return &Server{
+		Command: cmd,
+	}
+}
+
+func (r *Registry) BuildServerInfoCommand() *cobra.Command {
+	return &cobra.Command{
+		Use: "info",
+		Short: "Display envoy server information",
 		Long:  `Display server information about the envoy sidecar`,
-		Args: cobra.MinimumNArgs(2),
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			controller := ServerInfoController{
-				ServiceName: args[1],
+				ServiceName: args[0],
 			}
 			return controller.Run()
 		},
-	})
+	}
+}
+
+type ServerInfoController struct {
+	ServiceName string
 }
 
 func (s *ServerInfoController) Run() error {

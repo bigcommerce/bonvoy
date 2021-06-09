@@ -7,40 +7,57 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type Logging struct {
+	Command *cobra.Command
+}
+
+func (r *Registry) Logging() *Logging {
+	cmd := &cobra.Command{
+		Use: "log",
+		Short: "Logging related commands",
+	}
+	cmd.AddCommand(r.BuildSetLogLevelCommand())
+	return &Logging{
+		Command: cmd,
+	}
+}
+
+// log level
+
 var (
-	logLevel string
+	desiredLogLevel string
 )
+
+func (r *Registry) BuildSetLogLevelCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "level",
+		Short: "Set Envoy log level",
+		Long:  `Set the Envoy sidecar log level`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			controller := SetLogLevelController{
+				ServiceName: args[0],
+			}
+			return controller.Run()
+		},
+	}
+	cmd.Flags().StringVarP(&desiredLogLevel, "level", "l", "", "Desired log level (debug/info/warning/error")
+	return cmd
+}
 
 type SetLogLevelController struct {
 	ServiceName string
 }
 
-func BuildSetLogLevelCommand(rootCmd *cobra.Command) {
-	cmd := &cobra.Command{
-		Use: "log level",
-		Short: "Set Envoy log level",
-		Long:  `Set the Envoy sidecar log level`,
-		Args: cobra.MinimumNArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			controller := SetLogLevelController{
-				ServiceName: args[1],
-			}
-			return controller.Run()
-		},
-	}
-	cmd.Flags().StringVarP(&logLevel, "level", "l", "", "Desired log level (debug/info/warning/error")
-	rootCmd.AddCommand(cmd)
-}
-
 func (c *SetLogLevelController) Run() error {
-	if logLevel == "" {
-		logLevel = c.SelectLogLevel()
+	if desiredLogLevel == "" {
+		desiredLogLevel = c.SelectLogLevel()
 	}
 	e, err := envoy.NewFromServiceName(c.ServiceName)
 	if err != nil {
 		return err
 	}
-	e.Logging().SetLevel(logLevel)
+	e.Logging().SetLevel(desiredLogLevel)
 	return nil
 }
 
