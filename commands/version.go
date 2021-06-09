@@ -2,32 +2,18 @@ package commands
 
 import (
 	"bonvoy/version"
-	"flag"
 	"fmt"
+	"github.com/spf13/cobra"
 )
 
-type VersionCommand struct {
-	fs *flag.FlagSet
-	name string
-}
-
-func BuildVersion() *VersionCommand {
-	gc := &VersionCommand{
-		fs: flag.NewFlagSet("version", flag.ContinueOnError),
-	}
-	gc.fs.Arg(0)
-	return gc
-}
-
-func (g *VersionCommand) Name() string {
-	return g.fs.Name()
-}
-
-func (g *VersionCommand) Init(args []string) error {
-	return g.fs.Parse(args)
-}
-
-func (g *VersionCommand) Run() error {
-	fmt.Println(version.Version)
-	return nil
+func BuildVersionCommand(rootCmd *cobra.Command) {
+	rootCmd.AddCommand(&cobra.Command{
+		Use: "version",
+		Short: "Display Bonvoy version",
+		Long:  `Display the Bonvoy CLI version`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(version.Version)
+			return nil
+		},
+	})
 }

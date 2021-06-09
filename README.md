@@ -19,5 +19,17 @@ bonvoy listeners auth-grpc
 ### Show all Expired Certificates
 
 ```bash
-bonvoy certs-expired auth-grpc
+bonvoy certificates expired auth-grpc
+```
+
+### Show Server Info
+
+```bash
+bonvoy server info auth-grpc
+```
+
+### Set Envoy Log Level
+
+```bash
+bonvoy log level auth-grpc -l debug
 ```

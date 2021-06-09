@@ -2,49 +2,42 @@ package commands
 
 import (
 	"bonvoy/envoy"
-	"flag"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/cobra"
 	"os"
 )
 
-type ServerInfoCommand struct {
-	fs *flag.FlagSet
-	name string
+type ServerInfoController struct {
+	ServiceName string
 }
 
-// ListenersCommand
-func BuildServerInfoCommand() *ServerInfoCommand {
-	gc := &ServerInfoCommand{
-		fs: flag.NewFlagSet("server-info", flag.ContinueOnError),
-	}
-	gc.fs.StringVar(&gc.name, "service", "", "name of the service sidecar to see server information for")
-	return gc
+func BuildServerInfoCommand(rootCmd *cobra.Command) {
+	rootCmd.AddCommand(&cobra.Command{
+		Use: "server info",
+		Short: "Envoy server information",
+		Long:  `Display server information about the envoy sidecar`,
+		Args: cobra.MinimumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			controller := ServerInfoController{
+				ServiceName: args[1],
+			}
+			return controller.Run()
+		},
+	})
 }
 
-func (g *ServerInfoCommand) Name() string {
-	return g.fs.Name()
-}
-
-func (g *ServerInfoCommand) Init(args []string) error {
-	return g.fs.Parse(args)
-}
-
-func (g *ServerInfoCommand) Run() error {
-	var name = g.name
-	if name == "" {
-		name = g.fs.Arg(0)
-	}
-	e, err := envoy.NewFromServiceName(name)
+func (s *ServerInfoController) Run() error {
+	e, err := envoy.NewFromServiceName(s.ServiceName)
 	if err != nil {
 		return err
 	}
 	response := e.Server().Info()
-	g.DisplayOutput(response)
+	s.DisplayOutput(response)
 	return nil
 }
 
-func (g *ServerInfoCommand) DisplayOutput(data envoy.ServerInfoJson) {
+func (s *ServerInfoController) DisplayOutput(data envoy.ServerInfoJson) {
 	fmt.Println("----------------------")
 	fmt.Println("- Server Information -")
 	fmt.Println("----------------------")

@@ -2,57 +2,49 @@ package commands
 
 import (
 	"bonvoy/envoy"
-	"flag"
 	"fmt"
 	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
 )
 
-type SetLogLevelCommand struct {
-	fs *flag.FlagSet
-	name string
-	level string
+var (
+	logLevel string
+)
+
+type SetLogLevelController struct {
+	ServiceName string
 }
 
-// ListenersCommand
-func BuildSetLogLevelCommand() *SetLogLevelCommand {
-	gc := &SetLogLevelCommand{
-		fs: flag.NewFlagSet("log-level", flag.ContinueOnError),
+func BuildSetLogLevelCommand(rootCmd *cobra.Command) {
+	cmd := &cobra.Command{
+		Use: "log level",
+		Short: "Set Envoy log level",
+		Long:  `Set the Envoy sidecar log level`,
+		Args: cobra.MinimumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			controller := SetLogLevelController{
+				ServiceName: args[1],
+			}
+			return controller.Run()
+		},
 	}
-	gc.fs.StringVar(&gc.name, "service", "", "name of the service sidecar to set logging for")
-	gc.fs.StringVar(&gc.level, "level", "", "Value to set logging to. Must be one of debug/info/warning/error")
-	return gc
+	cmd.Flags().StringVarP(&logLevel, "level", "l", "", "Desired log level (debug/info/warning/error")
+	rootCmd.AddCommand(cmd)
 }
 
-func (g *SetLogLevelCommand) Name() string {
-	return g.fs.Name()
-}
-
-func (g *SetLogLevelCommand) Init(args []string) error {
-	return g.fs.Parse(args)
-}
-
-func (g *SetLogLevelCommand) Run() error {
-	var name = g.name
-	if name == "" {
-		name = g.fs.Arg(0)
+func (c *SetLogLevelController) Run() error {
+	if logLevel == "" {
+		logLevel = c.SelectLogLevel()
 	}
-	var level = g.level
-	if level == "" {
-		level = g.fs.Arg(1)
-		if level == "" {
-			level = g.SelectLogLevel()
-		}
-	}
-
-	e, err := envoy.NewFromServiceName(name)
+	e, err := envoy.NewFromServiceName(c.ServiceName)
 	if err != nil {
 		return err
 	}
-	e.Logging().SetLevel(level)
+	e.Logging().SetLevel(logLevel)
 	return nil
 }
 
-func (g *SetLogLevelCommand) SelectLogLevel() string {
+func (c *SetLogLevelController) SelectLogLevel() string {
 	prompt := promptui.Select{
 		Label: "Please Select a Log Level",
 		Items: []string{"debug", "info", "warning", "error"},
@@ -60,7 +52,7 @@ func (g *SetLogLevelCommand) SelectLogLevel() string {
 	_, desired, err := prompt.Run()
 	if err != nil {
 		fmt.Printf("Prompt failed %v\n", err)
-		panic(err)
+		return "info"
 	}
 	return desired
 }
