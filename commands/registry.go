@@ -30,6 +30,7 @@ func (r *Registry) RegisterCommands() {
 	rootCmd.AddCommand(r.Server().Command)
 	rootCmd.AddCommand(r.Logging().Command)
 	rootCmd.AddCommand(r.Listeners().Command)
+	rootCmd.AddCommand(r.Clusters().Command)
 	rootCmd.AddCommand(r.Certificates().Command)
 	rootCmd.AddCommand(r.Version().Command)
 }

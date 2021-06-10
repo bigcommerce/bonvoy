@@ -1,0 +1,189 @@
+package envoy
+
+import (
+	"github.com/spf13/cast"
+	"strings"
+)
+
+type Clusters struct {
+	i *Instance
+	endpoints ClustersEndpoints
+}
+
+type ClustersEndpoints struct {
+	list string
+}
+
+func (i *Instance) Clusters() *Clusters {
+	return &Clusters{
+		i: i,
+		endpoints: ClustersEndpoints{
+			list: i.Address + "/clusters",
+		},
+	}
+}
+
+
+type ClusterStatistics struct {
+	Host string
+	Outlier ClusterOutlierStatistics
+	DefaultPriority ClusterPriorityStatistics
+	HighPriority ClusterPriorityStatistics
+	AddedViaApi bool
+	Instances map[string]ClusterInstance
+}
+type ClusterInstance struct {
+	Hostname string
+	Connections ClusterConnectionStatistics
+	Requests ClusterRequestStatistics
+	HealthFlags string
+	Weight int
+	Region string
+	Zone string
+	SubZone string
+	Canary bool
+	Priority int
+	SuccessRate string
+	LocalOriginSuccessRate string
+}
+type ClusterOutlierStatistics struct {
+	SuccessRateAverage string
+	SuccessRateEjectionThreshold string
+	LocalOriginSuccessRateAverage string
+	LocalOriginSuccessRateEjectionThreshold string
+}
+type ClusterPriorityStatistics struct {
+	MaxConnections int
+	MaxPendingRequests int
+	MaxRequests int
+	MaxRetries int
+}
+type ClusterConnectionStatistics struct {
+	Active int
+	Failed int
+	Total int
+}
+type ClusterRequestStatistics struct {
+	Active int
+	Error int
+	Success int
+	Timeout int
+	Total int
+}
+
+func (c *Clusters) GetStatistics() (map[string]ClusterStatistics, error) {
+	var clusters = make(map[string]ClusterStatistics)
+
+	raw, err := c.i.nsenter.Curl("-s", c.endpoints.list)
+	if err != nil { return clusters, err }
+
+	data := strings.Split(raw, "\n")
+	for _, str := range data {
+		parts := strings.Split(str, "::")
+		if len(parts) < 2 { continue }
+
+
+		var cs ClusterStatistics
+		if _, ok := clusters[parts[0]]; ok {
+			cs = clusters[parts[0]]
+		} else {
+			cs = ClusterStatistics{
+				Outlier:         ClusterOutlierStatistics{},
+				DefaultPriority: ClusterPriorityStatistics{},
+				HighPriority:    ClusterPriorityStatistics{},
+				Instances:       make(map[string]ClusterInstance),
+			}
+		}
+		cs.Host = parts[0]
+		if parts[1] == "outlier" {
+			cs.Outlier.Deserialize(parts[2], parts[3])
+		} else if parts[1] == "default_priority" {
+			cs.DefaultPriority.Deserialize(parts[2], parts[3])
+		} else if parts[1] == "high_priority" {
+			cs.HighPriority.Deserialize(parts[2], parts[3])
+		} else if parts[1] == "added_via_api" {
+			cs.AddedViaApi = parts[2] == "true"
+		} else if strings.Contains(parts[1], ":") { // then this is an instance addr
+			var i ClusterInstance
+			if _, ok := cs.Instances[parts[1]]; ok {
+				i = cs.Instances[parts[1]]
+			} else {
+				i = ClusterInstance{
+					Hostname: parts[1],
+					Connections: ClusterConnectionStatistics{},
+					Requests: ClusterRequestStatistics{},
+				}
+			}
+			i.Deserialize(parts[2], parts[3])
+			cs.Instances[parts[1]] = i
+		} else {
+			continue
+		}
+		clusters[parts[0]] = cs
+	}
+
+	return clusters, nil
+}
+
+func (s *ClusterOutlierStatistics) Deserialize(fieldName string, value string) {
+	switch fieldName {
+	case "success_rate_average":
+		s.SuccessRateAverage = value
+	case "success_rate_ejection_threshold":
+		s.SuccessRateEjectionThreshold = value
+	case "local_origin_success_rate_average":
+		s.LocalOriginSuccessRateAverage = value
+	case "local_origin_success_rate_ejection_threshold":
+		s.LocalOriginSuccessRateEjectionThreshold = value
+	}
+}
+
+func (s *ClusterPriorityStatistics) Deserialize(fieldName string, value string) {
+	switch fieldName {
+	case "max_connections":
+		s.MaxConnections = cast.ToInt(value)
+	case "max_pending_requests":
+		s.MaxPendingRequests = cast.ToInt(value)
+	case "max_requests":
+		s.MaxRequests = cast.ToInt(value)
+	case "max_retries":
+		s.MaxRetries = cast.ToInt(value)
+	}
+}
+
+func (s *ClusterInstance) Deserialize(fieldName string, value string) {
+	switch fieldName {
+	case "cx_active":
+		s.Connections.Active = cast.ToInt(value)
+	case "cx_connect_fail":
+		s.Connections.Failed = cast.ToInt(value)
+	case "cx_total":
+		s.Connections.Total = cast.ToInt(value)
+	case "rq_active":
+		s.Requests.Active = cast.ToInt(value)
+	case "rq_error":
+		s.Requests.Error = cast.ToInt(value)
+	case "rq_success":
+		s.Requests.Success = cast.ToInt(value)
+	case "rq_total":
+		s.Requests.Total = cast.ToInt(value)
+	case "health_flags":
+		s.HealthFlags = value
+	case "weight":
+		s.Weight = cast.ToInt(value)
+	case "region":
+		s.Region = value
+	case "zone":
+		s.Zone = value
+	case "sub_zone":
+		s.SubZone = value
+	case "canary":
+		s.Canary = value == "true"
+	case "priority":
+		s.Priority = cast.ToInt(value)
+	case "success_rate":
+		s.SuccessRate = value
+	case "local_origin_success_rate":
+		s.LocalOriginSuccessRate = value
+	}
+}

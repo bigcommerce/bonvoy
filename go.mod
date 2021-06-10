@@ -7,7 +7,9 @@ require (
 	github.com/containerd/containerd v1.5.2 // indirect
 	github.com/docker/docker v20.10.7+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/fatih/color v1.12.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/iancoleman/strcase v0.1.3 // indirect
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect

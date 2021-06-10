@@ -2,6 +2,7 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+* Add `clusters list` to display all clusters and relevant statistics around them
 * Add `-r/--restart` flag for `certificates expired` to restart all expired sidecars
 * Add `certificates expired all` to show all expired certs on a host
 
