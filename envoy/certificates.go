@@ -1,13 +1,16 @@
 package envoy
 
 import (
+	"bonvoy/consul"
 	"encoding/json"
+	"strconv"
 	"strings"
 )
 
 type Certificates struct {
 	i *Instance
 	endpoints CertificatesEndpoints
+	consul consul.Client
 }
 
 type CertificatesEndpoints struct {
@@ -20,6 +23,7 @@ func (i *Instance) Certificates() *Certificates {
 		endpoints: CertificatesEndpoints{
 			list: i.Address + "/certs",
 		},
+		consul: consul.NewClient(),
 	}
 }
 
@@ -58,4 +62,51 @@ func (c *Certificates) Get() (CertsResponse, error) {
 		return CertsResponse{}, err
 	}
 	return response, nil
+}
+
+type ExpiredCertificate struct {
+	ServiceName string
+	Pid int
+	Envoy *Instance
+	EnvoyExpiration string
+	EnvoyDaysUntilExpiration int
+	ConsulExpiration string
+}
+
+func (c *Certificates) FindExpired() ([]ExpiredCertificate, error) {
+	var expiredCerts []ExpiredCertificate
+
+	data, err := c.Get()
+	if err != nil { return expiredCerts, err }
+
+	readSerials := map[string]bool{}
+
+	for _, certs := range data.Certificates {
+		for _, cert := range certs.CertificateChain {
+			if readSerials[cert.SerialNumber] {
+				continue // ignore duplicates
+			}
+			readSerials[cert.SerialNumber] = true
+			a := strings.Split(cert.SubjectAltNames[0].Uri, "/")
+			svc := a[len(a)-1]
+			leaf, lErr := c.consul.Agent().GetConnectLeafCaCertificate(svc)
+			if lErr != nil { return expiredCerts, lErr }
+
+			if cert.ExpirationTime != leaf.ValidBefore {
+				daysUntilExpiration, err := strconv.Atoi(cert.DaysUntilExpiration)
+				if err != nil { daysUntilExpiration = -1 }
+
+				expiredCerts = append(expiredCerts, ExpiredCertificate{
+					ServiceName: svc,
+					Envoy: c.i,
+					Pid: c.i.Pid,
+					EnvoyExpiration: cert.ExpirationTime,
+					EnvoyDaysUntilExpiration: daysUntilExpiration,
+					ConsulExpiration: leaf.ValidBefore,
+				})
+			}
+		}
+	}
+
+	return expiredCerts, nil
 }
