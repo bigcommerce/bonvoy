@@ -22,10 +22,22 @@ bonvoy listeners auth-grpc
 bonvoy certificates expired auth-grpc
 ```
 
+Or show all certs expired on a host:
+
+```bash
+bonvoy certificates expired all
+```
+
 ### Show Server Info
 
 ```bash
 bonvoy server info auth-grpc
+```
+
+### Show Server Memory
+
+```bash
+bonvoy server memory auth-grpc
 ```
 
 ### Set Envoy Log Level

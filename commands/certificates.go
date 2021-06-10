@@ -45,14 +45,36 @@ type ExpiredCertificatesController struct {
 }
 
 func (c *ExpiredCertificatesController) Run() error {
-	e, err := envoy.NewFromServiceName(c.ServiceName)
-	if err != nil { return err }
+	if c.ServiceName != "all" {
+		e, err := envoy.NewFromServiceName(c.ServiceName)
+		if err != nil { return err }
 
+		return c.LookupForSidecar(e)
+	} else {
+		sidecars, err := envoy.AllSidecars()
+		if err != nil { return err }
+
+		for _, e := range sidecars {
+			err = c.LookupForSidecar(e)
+			if err != nil { return err }
+		}
+	}
+
+	return nil
+}
+
+func (c *ExpiredCertificatesController) LookupForSidecar(e envoy.Instance) error {
 	data, err := e.Certificates().Get()
 	if err != nil { return err }
 
+	readSerials := map[string]bool{}
+
 	for _, certs := range data.Certificates {
 		for _, cert := range certs.CertificateChain {
+			if readSerials[cert.SerialNumber] {
+				continue // ignore duplicates
+			}
+			readSerials[cert.SerialNumber] = true
 			a := strings.Split(cert.SubjectAltNames[0].Uri, "/")
 			svc := a[len(a)-1]
 			leaf, lErr := c.Consul.Agent().GetConnectLeafCaCertificate(svc)
@@ -66,5 +88,6 @@ func (c *ExpiredCertificatesController) Run() error {
 			}
 		}
 	}
+
 	return nil
 }

@@ -2,6 +2,8 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+* Add `certificates expired all` to show all expired certs on a host
+
 ## 0.0.3
 
 * Ensure query for containers does not include dead containers
