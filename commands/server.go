@@ -3,6 +3,7 @@ package commands
 import (
 	"bonvoy/envoy"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"os"
@@ -19,6 +20,7 @@ func (r *Registry) Server() *Server {
 	}
 	cmd.AddCommand(r.BuildServerInfoCommand())
 	cmd.AddCommand(r.BuildServerMemoryCommand())
+	cmd.AddCommand(r.BuildServerRestartCommand())
 	return &Server{
 		Command: cmd,
 	}
@@ -158,5 +160,37 @@ func (s *ServerMemoryController) Run() error {
 	table.AppendBulk(d)
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
 	table.Render()
+	return nil
+}
+
+// server restart
+
+type ServerRestartController struct {
+	ServiceName string
+}
+func (r *Registry) BuildServerRestartCommand() *cobra.Command {
+	return &cobra.Command{
+		Use: "restart",
+		Short: "Restart an Envoy sidecar",
+		Long:  `Restarts an Envoy sidecar process`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			controller := ServerRestartController{
+				ServiceName: args[0],
+			}
+			return controller.Run()
+		},
+	}
+}
+
+func (s *ServerRestartController) Run() error {
+	e, err := envoy.NewFromServiceName(s.ServiceName)
+	if err != nil { return err }
+
+	err = e.Restart()
+	if err != nil { return err }
+
+	color.Green(s.ServiceName + " Envoy restarted.")
+	// TODO: Would be nice to monitor and let the user know when the service comes back alive.
 	return nil
 }
