@@ -76,6 +76,6 @@ func GetAllProcessIds() ([]int, error) {
 
 // Restarts the Envoy instance
 func (i *Instance) Restart() error {
-	_, err := exec.Command("kill", "-9", strconv.Itoa(i.Pid)).Output()
+	_, err := i.nsenter.Curl("-X", "POST", i.Address + "/quitquitquit")
 	return err
 }
