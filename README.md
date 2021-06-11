@@ -10,38 +10,59 @@ Connect and Nomad environment.
 There are various commands you can run. Usually you are required to pass the
 name of the service you want to query the sidecar for.
 
-### List all Envoy Listeners
+### Listeners
 
+List all listeners:
 ```bash
 bonvoy listeners auth-grpc
 ```
 
-### Show all Expired Certificates
+### Clusters
 
+List all clusters for a sidecar:
+```bash
+bonvoy clusters list auth-grpc
+```
+
+### Certificates
+
+List all certificates:
+```bash
+bonvoy certificates list auth-grpc
+```
+
+List all expired certificates as compared to the Consul Agent:
 ```bash
 bonvoy certificates expired auth-grpc
 ```
 
 Or show all certs expired on a host:
-
 ```bash
 bonvoy certificates expired all
 ```
 
-### Show Server Info
+### Config
 
+Dump the config:
+```bash
+bonvoy config dump auth-grpc
+```
+
+### Server
+
+Output server information:
 ```bash
 bonvoy server info auth-grpc
 ```
 
-### Show Server Memory
-
+Show server memory statistics:
 ```bash
 bonvoy server memory auth-grpc
 ```
 
-### Set Envoy Log Level
+### Logging
 
+Set the log level for a sidecar:
 ```bash
 bonvoy log level auth-grpc -l debug
 ```
