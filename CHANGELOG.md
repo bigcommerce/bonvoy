@@ -2,6 +2,8 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+* Add `config dump` to dump the entire Envoy config
+
 ## 0.0.4
 
 * Add `clusters list` to display all clusters and relevant statistics around them

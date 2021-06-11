@@ -7,7 +7,6 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	dockerClient "github.com/docker/docker/client"
 	"github.com/manifoldco/promptui"
-	"strings"
 )
 
 type Client struct {
@@ -49,8 +48,6 @@ func (c *Client) GetEnvoyPid(name string) (int, error) {
 	} else {
 		return 0, fmt.Errorf("No sidecar found for name: " + name)
 	}
-
-	fmt.Printf("Entering %s\n\n", strings.TrimLeft(desiredName, "/"))
 
 	var desiredId = ""
 	for _, container := range containers {
