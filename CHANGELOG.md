@@ -2,6 +2,7 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+* Add `statistics dump` command
 * Better resiliency around restarting sidecars
 * Add `certificates list` to show all registered certificates on a sidecar
 * Add `config dump` to dump the entire Envoy config

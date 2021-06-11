@@ -33,5 +33,6 @@ func (r *Registry) RegisterCommands() {
 	rootCmd.AddCommand(r.Clusters().Command)
 	rootCmd.AddCommand(r.Certificates().Command)
 	rootCmd.AddCommand(r.Config().Command)
+	rootCmd.AddCommand(r.Statistics().Command)
 	rootCmd.AddCommand(r.Version().Command)
 }
