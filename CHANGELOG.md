@@ -2,6 +2,8 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+## 0.1.0
+
 * Add `server restart` to restart a sidecar
 * Add `statistics dump` command to dump statistics
 * Better resiliency around restarting sidecars
