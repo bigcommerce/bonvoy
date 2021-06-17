@@ -19,7 +19,11 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
+	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
 	golang.org/x/sys v0.0.0-20210608053332-aa57babbf139 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	google.golang.org/grpc v1.38.0 // indirect
+	gopkg.in/h2non/gentleman-mock.v2 v2.0.0
+	gopkg.in/h2non/gentleman.v2 v2.0.5
+	gopkg.in/h2non/gock.v1 v1.1.0 // indirect
 )

@@ -2,6 +2,7 @@ package envoy
 
 import (
 	"bonvoy/docker"
+	"bonvoy/nomad"
 	"bonvoy/nsenter"
 	"github.com/spf13/viper"
 	"os/exec"
@@ -12,6 +13,8 @@ import (
 type Instance struct {
 	Address string
 	Pid int
+	NomadAllocationID string
+	Nomad nomad.Client
 	docker docker.Client
 	nsenter nsenter.Client
 }
@@ -22,17 +25,17 @@ func GetDefaultHost() string {
 
 func NewFromServiceName(name string) (Instance, error) {
 	dci := docker.NewClient()
-	pid, err := dci.GetEnvoyPid(name)
-	if err != nil {
-		return Instance{}, err
-	} else {
-		return Instance{
-			Address: GetDefaultHost(),
-			Pid: pid,
-			docker: dci,
-			nsenter: nsenter.NewClient(pid),
-		}, nil
-	}
+	container, err := dci.GetSidecarContainer(name)
+	if err != nil { return Instance{}, err }
+
+	return Instance{
+		Address: GetDefaultHost(),
+		Pid: container.State.Pid,
+		NomadAllocationID: container.Config.Labels["com.hashicorp.nomad.alloc_id"],
+		docker: dci,
+		Nomad: nomad.NewClient(),
+		nsenter: nsenter.NewClient(container.State.Pid),
+	}, nil
 }
 
 func AllSidecars() ([]Instance, error) {
@@ -76,6 +79,8 @@ func GetAllProcessIds() ([]int, error) {
 
 // Restarts the Envoy instance
 func (i *Instance) Restart() error {
-	_, err := i.nsenter.Curl("-X", "POST", i.Address + "/quitquitquit")
-	return err
+	err := i.Nomad.Allocations().Restart(i.NomadAllocationID)
+	if err != nil { return err }
+
+	return nil
 }

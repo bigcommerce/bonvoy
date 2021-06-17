@@ -1,10 +1,5 @@
 package consul
 
-import (
-	"encoding/json"
-	"net/http"
-)
-
 type Agent struct {
 	c *Client
 }
@@ -32,12 +27,13 @@ func (a *Agent) GetConnectLeafCaCertificate(svc string) (ConnectLeafCaCertificat
 func (c *Client) GetConnectLeafCaCertificate(svc string) (ConnectLeafCaCertificate, error) {
 	var response ConnectLeafCaCertificate
 
-	r, err := http.Get(c.address + "/v1/agent/connect/ca/leaf/" + svc)
+	req := c.client.Request()
+	req.Path("/v1/agent/connect/ca/leaf/" + svc)
+	resp, err := req.Send()
 	if err != nil { return response, nil }
 
-	defer r.Body.Close()
-	err = json.NewDecoder(r.Body).Decode(&response)
-	if err != nil { return response, nil }
+	jErr := resp.JSON(&response)
+	if jErr != nil { return response, jErr }
 
 	return response, nil
 }

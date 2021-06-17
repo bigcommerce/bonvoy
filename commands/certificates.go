@@ -163,16 +163,17 @@ func (c *CertificatesExpiredController) Run(restart bool) error {
 	}
 
 	for _, e := range expiredCerts {
-		fmt.Println(e.ServiceName)
+		color.Green(e.ServiceName)
 		fmt.Println("  Envoy Process ID:", e.Pid)
 		fmt.Printf("  Envoy Certificate Expiry: %s (%d days)\n", e.EnvoyExpiration, e.EnvoyDaysUntilExpiration)
 		fmt.Println("  Consul Agent Certificate Expiry: ", e.ConsulExpiration)
 
 		if restart == true {
+			color.Green("    Restarting " + e.ServiceName + " Envoy...")
 			err := e.Envoy.Restart()
 			if err != nil { return err }
 
-			fmt.Println("...restarting...Done.")
+			color.Green("    ...done.")
 		}
 	}
 
