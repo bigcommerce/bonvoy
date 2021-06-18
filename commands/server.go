@@ -187,10 +187,11 @@ func (s *ServerRestartController) Run() error {
 	e, err := envoy.NewFromServiceName(s.ServiceName)
 	if err != nil { return err }
 
-	err = e.Restart()
-	if err != nil { return err }
+	color.Green("Restarting " + s.ServiceName + " Envoy...")
+
+	rErr := e.Restart()
+	if rErr != nil { fmt.Println(rErr); return rErr }
 
 	color.Green(s.ServiceName + " Envoy restarted.")
-	// TODO: Would be nice to monitor and let the user know when the service comes back alive.
 	return nil
 }

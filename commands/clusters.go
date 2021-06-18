@@ -32,18 +32,27 @@ func (r *Registry) BuildListClustersCommand() *cobra.Command {
 		Long:  `Display all clusters statistics for a given service`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cluster, err := cmd.Flags().GetString("cluster")
+			if err != nil { return err }
+			if cluster == "" && len(args) >= 2 { // allow `clusters list [service] [cluster]` syntax
+				cluster = args[1]
+			}
+
 			controller := ListClustersController{
 				ServiceName: args[0],
+				Cluster: cluster,
 				Consul: consul.NewClient(),
 			}
 			return controller.Run()
 		},
 	}
+	cmd.Flags().String("cluster", "", "Filter to a specific cluster")
 	return cmd
 }
 
 type ListClustersController struct {
 	ServiceName string
+	Cluster string
 	Consul consul.Client
 }
 
@@ -51,7 +60,7 @@ func (c *ListClustersController) Run() error {
 	e, err := envoy.NewFromServiceName(c.ServiceName)
 	if err != nil { return err }
 
-	stats, gErr := e.Clusters().GetStatistics()
+	stats, gErr := e.Clusters().GetStatistics(c.Cluster)
 	if gErr != nil { return gErr }
 
 	c.DisplayOutput(stats)

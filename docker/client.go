@@ -24,14 +24,23 @@ func NewClient() Client {
 }
 
 func (c *Client) GetEnvoyPid(name string) (int, error) {
+	container, err := c.GetSidecarContainer(name)
+	if err != nil { return 0, err }
+
+	return container.State.Pid, nil
+}
+
+func (c *Client) GetSidecarContainer(serviceName string) (types.ContainerJSON, error) {
 	filter := filters.NewArgs()
-	filter.Add("name", "connect-proxy-" + name)
+	filter.Add("name", "connect-proxy-" + serviceName)
 
 	containers, err := c.cli.ContainerList(context.Background(), types.ContainerListOptions{
 		All: false,
 		Filters: filter,
 	})
-	if err != nil { return 0, err }
+	if err != nil {
+		return types.ContainerJSON{}, err
+	}
 
 	var containerNames []string
 	for _, container := range containers {
@@ -41,12 +50,14 @@ func (c *Client) GetEnvoyPid(name string) (int, error) {
 	desiredName := ""
 	if len(containerNames) > 1 {
 		desiredName, err = c.SelectDesiredContainer(containerNames)
-		if err != nil { return 0, err }
+		if err != nil {
+			return types.ContainerJSON{}, err
+		}
 
 	} else if len(containerNames) == 1 {
 		desiredName = containerNames[0]
 	} else {
-		return 0, fmt.Errorf("No sidecar found for name: " + name)
+		return types.ContainerJSON{}, fmt.Errorf("No sidecar found for name: " + serviceName)
 	}
 
 	var desiredId = ""
@@ -57,9 +68,9 @@ func (c *Client) GetEnvoyPid(name string) (int, error) {
 	}
 	container, err := c.cli.ContainerInspect(context.Background(), desiredId)
 	if err != nil {
-		return 0, err
+		return types.ContainerJSON{}, err
 	}
-	return container.State.Pid, nil
+	return container, nil
 }
 
 func (c *Client) SelectDesiredContainer(names []string) (string, error) {

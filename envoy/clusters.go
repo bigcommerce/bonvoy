@@ -71,7 +71,7 @@ type ClusterRequestStatistics struct {
 	Total int
 }
 
-func (c *Clusters) GetStatistics() (map[string]ClusterStatistics, error) {
+func (c *Clusters) GetStatistics(specific string) (map[string]ClusterStatistics, error) {
 	var clusters = make(map[string]ClusterStatistics)
 
 	raw, err := c.i.nsenter.Curl("-s", c.endpoints.list)
@@ -81,7 +81,6 @@ func (c *Clusters) GetStatistics() (map[string]ClusterStatistics, error) {
 	for _, str := range data {
 		parts := strings.Split(str, "::")
 		if len(parts) < 2 { continue }
-
 
 		var cs ClusterStatistics
 		if _, ok := clusters[parts[0]]; ok {
@@ -95,6 +94,12 @@ func (c *Clusters) GetStatistics() (map[string]ClusterStatistics, error) {
 			}
 		}
 		cs.Host = parts[0]
+
+		// If specific cluster specified, filter others out
+		if specific != "" && cs.GetConsulName() != specific {
+			continue
+		}
+
 		if parts[1] == "outlier" {
 			cs.Outlier.Deserialize(parts[2], parts[3])
 		} else if parts[1] == "default_priority" {
@@ -186,4 +191,8 @@ func (s *ClusterInstance) Deserialize(fieldName string, value string) {
 	case "local_origin_success_rate":
 		s.LocalOriginSuccessRate = value
 	}
+}
+
+func (s *ClusterStatistics) GetConsulName() string {
+	return strings.Split(s.Host, ".")[0]
 }

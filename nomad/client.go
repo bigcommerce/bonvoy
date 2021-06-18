@@ -1,4 +1,4 @@
-package consul
+package nomad
 
 import (
 	"crypto/tls"
@@ -13,7 +13,7 @@ type Client struct {
 }
 
 func GetDefaultAddress() string {
-	return viper.GetString("CONSUL_API_HOST")
+	return viper.GetString("NOMAD_ADDR")
 }
 
 func NewClient() Client {

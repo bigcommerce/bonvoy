@@ -2,6 +2,10 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+* Adjust `server restart` to restart the Nomad allocation rather than killing Envoy.
+  This allows for a more graceful degradation of traffic to the service.
+* Add cluster filter to `clusters list` to only show a specific cluster
+
 ## 0.1.0
 
 * Add `server restart` to restart a sidecar
