@@ -25,50 +25,50 @@ func (i *Instance) Clusters() *Clusters {
 
 
 type ClusterStatistics struct {
-	Host string
-	Outlier ClusterOutlierStatistics
-	DefaultPriority ClusterPriorityStatistics
-	HighPriority ClusterPriorityStatistics
-	AddedViaApi bool
-	Instances map[string]ClusterInstance
+	Host string `json:"host"`
+	Outlier ClusterOutlierStatistics `json:"outlier"`
+	DefaultPriority ClusterPriorityStatistics `json:"default_priority"`
+	HighPriority ClusterPriorityStatistics `json:"high_priority"`
+	AddedViaApi bool `json:"added_via_api"`
+	Instances map[string]ClusterInstance `json:"instances"`
 }
 type ClusterInstance struct {
-	Hostname string
-	Connections ClusterConnectionStatistics
-	Requests ClusterRequestStatistics
-	HealthFlags string
-	Weight int
-	Region string
-	Zone string
-	SubZone string
-	Canary bool
-	Priority int
-	SuccessRate string
-	LocalOriginSuccessRate string
+	Hostname string `json:"hostname"`
+	Connections ClusterConnectionStatistics `json:"connections"`
+	Requests ClusterRequestStatistics `json:"requests"`
+	HealthFlags string `json:"health_flags"`
+	Weight int `json:"weight"`
+	Region string `json:"region"`
+	Zone string `json:"zone"`
+	SubZone string `json:"sub_zone"`
+	Canary bool `json:"canary"`
+	Priority int `json:"priority"`
+	SuccessRate string `json:"success_rate"`
+	LocalOriginSuccessRate string `json:"local_origin_success_rate"`
 }
 type ClusterOutlierStatistics struct {
-	SuccessRateAverage string
-	SuccessRateEjectionThreshold string
-	LocalOriginSuccessRateAverage string
-	LocalOriginSuccessRateEjectionThreshold string
+	SuccessRateAverage string `json:"success_rate_average"`
+	SuccessRateEjectionThreshold string `json:"success_rate_ejection_threshold"`
+	LocalOriginSuccessRateAverage string `json:"local_origin_success_rate_average"`
+	LocalOriginSuccessRateEjectionThreshold string `json:"local_origin_success_rate_ejection_threshold"`
 }
 type ClusterPriorityStatistics struct {
-	MaxConnections int
-	MaxPendingRequests int
-	MaxRequests int
-	MaxRetries int
+	MaxConnections int `json:"max_connections"`
+	MaxPendingRequests int `json:"max_pending_requests"`
+	MaxRequests int `json:"max_requests"`
+	MaxRetries int `json:"max_retries"`
 }
 type ClusterConnectionStatistics struct {
-	Active int
-	Failed int
-	Total int
+	Active int `json:"active"`
+	Failed int `json:"failed"`
+	Total int `json:"total"`
 }
 type ClusterRequestStatistics struct {
-	Active int
-	Error int
-	Success int
-	Timeout int
-	Total int
+	Active int `json:"active"`
+	Error int `json:"error"`
+	Success int `json:"success"`
+	Timeout int `json:"timeout"`
+	Total int `json:"total"`
 }
 
 func (c *Clusters) GetStatistics(specific string) (map[string]ClusterStatistics, error) {

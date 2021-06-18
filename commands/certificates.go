@@ -4,11 +4,10 @@ import (
 	"bonvoy/consul"
 	"bonvoy/envoy"
 	"fmt"
-	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	"os"
+	"strings"
 )
 
 type Certificates struct {
@@ -27,6 +26,10 @@ func (r *Registry) Certificates() *Certificates {
 	}
 }
 
+/***********************************************************************************************************************
+ * certificates list [service]
+ **********************************************************************************************************************/
+
 func (r *Registry) BuildCertificatesListCommand() *cobra.Command {
 	return &cobra.Command{
 		Use: "list",
@@ -38,7 +41,10 @@ func (r *Registry) BuildCertificatesListCommand() *cobra.Command {
 				ServiceName: args[0],
 				Consul: consul.NewClient(),
 			}
-			return controller.Run()
+			o, cErr := controller.Run()
+			if cErr != nil { return cErr }
+
+			return r.Output(o)
 		},
 	}
 }
@@ -48,35 +54,53 @@ type CertificatesListController struct {
 	Consul consul.Client
 }
 
-func (c *CertificatesListController) Run() error {
+func (c *CertificatesListController) Run() (ListCertificatesResponse, error) {
+	resp := ListCertificatesResponse{
+		ServiceName: c.ServiceName,
+	}
 	e, err := envoy.NewFromServiceName(c.ServiceName)
-	if err != nil { return err }
+	if err != nil { return resp, err }
+
+	resp.Envoy = &e
 
 	certs, cErr := e.Certificates().Get()
-	if cErr != nil { return cErr }
+	if cErr != nil { return resp, cErr }
 
-	_, _ = color.New(color.FgGreen).Add(color.Bold).Println(c.ServiceName + " Envoy (PID " + cast.ToString(e.Pid) + ")")
-	color.Green("-----------------------------------------------------------")
+	var certificateChains []envoy.Certificate
+	var caCertificates []envoy.Certificate
 
 	for _, r := range certs.Certificates {
-		// Certs
-		color.Green("CertificateChain")
-		color.Green("--------------------------------")
-		err = c.DisplayCertificateList(r.CertificateChain)
-		if err != nil { return err }
-
-		// CA certs
-		fmt.Println("")
-		color.Green("CA Certificates")
-		color.Green("-------------------------------")
-		err = c.DisplayCertificateList(r.CaCertificates)
-		if err != nil { return err }
+		certificateChains = append(certificateChains, r.CertificateChain...)
+		caCertificates = append(caCertificates, r.CaCertificates...)
 	}
-	return nil
+	resp.CertificateChains = certificateChains
+	resp.CaCertificates = caCertificates
+	return resp, nil
 }
 
-func (c * CertificatesListController) DisplayCertificateList(certs []envoy.Certificate) error {
-	table := tablewriter.NewWriter(os.Stdout)
+type ListCertificatesResponse struct {
+	ServiceName string `json:"service"`
+	Envoy *envoy.Instance `json:"envoy"`
+	CertificateChains []envoy.Certificate`json:"certificate_chains"`
+	CaCertificates []envoy.Certificate`json:"ca_certificates"`
+}
+
+func (r ListCertificatesResponse) String() string {
+	o := ""
+	o += Ok("----------------------------------------------------------------------------")
+	o += Ok(r.ServiceName + " Envoy (PID " + cast.ToString(r.Envoy.Pid) + ")")
+	o += Ok("----------------------------------------------------------------------------")
+	o += Info("Certificate Chains:")
+	o += r.DisplayCertificateList(r.CertificateChains)
+	o += Info("")
+	o += Info("CA Certificates:")
+	o += r.DisplayCertificateList(r.CaCertificates)
+	return o
+}
+
+func (r *ListCertificatesResponse) DisplayCertificateList(certs []envoy.Certificate) string {
+	tableString := &strings.Builder{}
+	table := tablewriter.NewWriter(tableString)
 	table.SetHeader([]string{
 		"SAN",
 		"Serial #",
@@ -106,11 +130,12 @@ func (c * CertificatesListController) DisplayCertificateList(certs []envoy.Certi
 	table.AppendBulk(car)
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
 	table.Render()
-	return nil
+	return tableString.String()
 }
 
-// certificates expired
-
+/***********************************************************************************************************************
+ * certificates expired [service]
+ **********************************************************************************************************************/
 func (r *Registry) BuildCertificatesExpiredCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "expired",
@@ -125,7 +150,10 @@ func (r *Registry) BuildCertificatesExpiredCommand() *cobra.Command {
 			restart, err := cmd.Flags().GetBool("restart")
 			if err != nil { return err }
 
-			return controller.Run(restart)
+			o, cErr := controller.Run(restart)
+			if cErr != nil { return cErr }
+
+			return r.Output(o)
 		},
 	}
 	cmd.Flags().BoolP("restart", "r", false, "If passed, will restart all sidecars that have expired certificates")
@@ -137,19 +165,61 @@ type CertificatesExpiredController struct {
 	Consul consul.Client
 }
 
-func (c *CertificatesExpiredController) Run(restart bool) error {
+type FindExpiredCertificatesResponse struct {
+	ExpiredCertificates []envoy.ExpiredCertificate `json:"expiredCertificates"`
+	restart             bool
+}
+
+func (r FindExpiredCertificatesResponse) String() string {
+	tableString := &strings.Builder{}
+	table := tablewriter.NewWriter(tableString)
+	table.SetHeader([]string{
+		"Service",
+		"PID",
+		"Envoy Expiry",
+		"Days Left",
+		"Consul Leaf Expiry",
+		"Restarted",
+	})
+	restartStr := "NO"
+	if r.restart { restartStr = "YES" }
+
+	var d [][]string
+	for _, e := range r.ExpiredCertificates {
+		d = append(d, []string{
+			e.ServiceName,
+			fmt.Sprintf("%d", e.Pid),
+			e.EnvoyExpiration,
+			fmt.Sprintf("%d", e.EnvoyDaysUntilExpiration),
+			e.ConsulExpiration,
+			restartStr,
+		})
+	}
+
+	table.SetBorder(false)
+	table.SetTablePadding("\t")
+	table.AppendBulk(d)
+	table.SetAlignment(tablewriter.ALIGN_RIGHT)
+	table.Render()
+	return tableString.String()
+}
+
+func (c *CertificatesExpiredController) Run(restart bool) (FindExpiredCertificatesResponse, error) {
 	var expiredCerts []envoy.ExpiredCertificate
 	var sidecars []envoy.Instance
+	runResp := FindExpiredCertificatesResponse{
+		restart: restart,
+	}
 
 	if c.ServiceName != "all" {
 		e, err := envoy.NewFromServiceName(c.ServiceName)
-		if err != nil { return err }
+		if err != nil { return runResp, err }
 
 		sidecars = append(sidecars, e)
 	} else {
 		sideResp, err := envoy.AllSidecars()
 		if err != nil {
-			return err
+			return runResp, err
 		}
 
 		sidecars = append(sidecars, sideResp...)
@@ -157,25 +227,21 @@ func (c *CertificatesExpiredController) Run(restart bool) error {
 
 	for _, e := range sidecars {
 		resp, lErr := e.Certificates().FindExpired()
-		if lErr != nil { return lErr }
+		if lErr != nil { return runResp, lErr }
 
 		expiredCerts = append(expiredCerts, resp...)
 	}
 
+	runResp.ExpiredCertificates = expiredCerts
+
 	for _, e := range expiredCerts {
-		color.Green(e.ServiceName)
-		fmt.Println("  Envoy Process ID:", e.Pid)
-		fmt.Printf("  Envoy Certificate Expiry: %s (%d days)\n", e.EnvoyExpiration, e.EnvoyDaysUntilExpiration)
-		fmt.Println("  Consul Agent Certificate Expiry: ", e.ConsulExpiration)
-
 		if restart == true {
-			color.Green("    Restarting " + e.ServiceName + " Envoy...")
 			err := e.Envoy.Restart()
-			if err != nil { return err }
-
-			color.Green("    ...done.")
+			if err != nil {
+				return runResp, err
+			}
 		}
 	}
 
-	return nil
+	return runResp, nil
 }

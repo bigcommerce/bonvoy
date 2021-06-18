@@ -3,7 +3,7 @@ package commands
 import (
 	"bonvoy/consul"
 	"bonvoy/envoy"
-	"fmt"
+	"encoding/json"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,10 @@ func (r *Registry) BuildConfigDumpCommand() *cobra.Command {
 			controller := ConfigDumpController{
 				ServiceName: args[0],
 			}
-			return controller.Run()
+			o, err := controller.Run()
+			if err != nil { return err }
+
+			return r.Output(o)
 		},
 	}
 	cmd.Flags().BoolP("restart", "r", false, "If passed, will restart all sidecars that have expired certificates")
@@ -44,13 +47,33 @@ type ConfigDumpController struct {
 	Consul consul.Client
 }
 
-func (c *ConfigDumpController) Run() error {
+func (c *ConfigDumpController) Run() (ConfigDumpResponse, error) {
+	resp := ConfigDumpResponse{
+		ServiceName: c.ServiceName,
+	}
 	e, err := envoy.NewFromServiceName(c.ServiceName)
-	if err != nil { return err }
+	if err != nil { return resp, err }
+
+	resp.Envoy = &e
 
 	result, cErr := e.Config().Dump()
-	if cErr != nil { return cErr }
+	if cErr != nil { return resp, cErr }
 
-	fmt.Println(result)
-	return nil
+	var r map[string]interface{}
+	err = json.Unmarshal([]byte(result), &r)
+	if err != nil { return resp, err }
+
+	resp.Output = r
+	return resp, nil
+}
+
+type ConfigDumpResponse struct {
+	ServiceName string `json:"service"`
+	Envoy *envoy.Instance `json:"envoy"`
+	Output map[string]interface{} `json:"output,json"`
+}
+
+func (r ConfigDumpResponse) String() string {
+	v, _ := json.MarshalIndent(r.Output, "", "  ")
+	return string(v)
 }

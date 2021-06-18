@@ -10,11 +10,13 @@ Connect and Nomad environment.
 There are various commands you can run. Usually you are required to pass the
 name of the service you want to query the sidecar for.
 
+All commands have the ability to output in JSON format with: `-o json`
+
 ### Listeners
 
 List all listeners:
 ```bash
-bonvoy listeners auth-grpc
+bonvoy listeners list auth-grpc
 ```
 
 ### Clusters

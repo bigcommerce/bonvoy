@@ -23,8 +23,8 @@ func (i *Instance) Listeners() *Listeners {
 }
 
 type Listener struct {
-	Name string
-	TargetAddress string
+	Name string `json:"name"`
+	TargetAddress string `json:"address"`
 }
 
 func (l *Listeners) Get() ([]Listener, error) {

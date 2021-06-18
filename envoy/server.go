@@ -88,10 +88,10 @@ func (l *Server) Memory() (ServerMemoryJson, error) {
 }
 
 type ServerMemoryJson struct {
-	Allocated string 			`json:"allocated"`
-	HeapSize string				`json:"heap_size"`
-	PageHeapUnmapped string 	`json:"pageheap_unmapped"`
-	PageHeapFree string 		`json:"pageheap_free"`
-	TotalThreadCache string 	`json:"total_thread_cache"`
-	TotalPhysicalBytes string 	`json:"total_physical_bytes"`
+	Allocated int 			`json:"allocated,string"`
+	HeapSize int			`json:"heap_size,string"`
+	PageHeapUnmapped int 	`json:"pageheap_unmapped,string"`
+	PageHeapFree int 		`json:"pageheap_free,string"`
+	TotalThreadCache int 	`json:"total_thread_cache,string"`
+	TotalPhysicalBytes int 	`json:"total_physical_bytes,string"`
 }

@@ -2,12 +2,19 @@ package commands
 
 import (
 	"bonvoy/version"
-	"fmt"
 	"github.com/spf13/cobra"
 )
 
 type Version struct {
 	Command *cobra.Command
+}
+
+type GetVersionResponse struct {
+	Version string `json:"version"`
+}
+
+func (pi GetVersionResponse) String() string {
+	return pi.Version
 }
 
 func (r *Registry) Version() *Version {
@@ -17,8 +24,10 @@ func (r *Registry) Version() *Version {
 			Short: "Display Bonvoy version",
 			Long:  `Display the Bonvoy CLI version`,
 			RunE: func(cmd *cobra.Command, args []string) error {
-				fmt.Println(version.Version)
-				return nil
+				pi := GetVersionResponse{
+					Version: version.Version,
+				}
+				return r.Output(pi)
 			},
 		},
 	}

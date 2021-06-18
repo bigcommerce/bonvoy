@@ -1,9 +1,5 @@
 package envoy
 
-import (
-	"fmt"
-)
-
 type Logging struct {
 	i *Instance
 	endpoints LoggingEndpoints
@@ -21,10 +17,9 @@ func (i *Instance) Logging() *Logging {
 	}
 }
 
-func (l *Logging) SetLevel(level string) error {
+func (l *Logging) SetLevel(level string) (string, error) {
 	result, err := l.i.nsenter.Curl("-X", "POST", l.endpoints.logging + "?level="+level)
-	if err != nil { return err }
+	if err != nil { return "", err }
 
-	fmt.Println(result)
-	return nil
+	return result, nil
 }
