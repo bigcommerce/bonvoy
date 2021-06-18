@@ -2,6 +2,7 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+* Add `-o json` to output data into a JSON output format
 * Adjust `server restart` to restart the Nomad allocation rather than killing Envoy.
   This allows for a more graceful degradation of traffic to the service.
 * Add cluster filter to `clusters list` to only show a specific cluster

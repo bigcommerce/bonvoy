@@ -11,10 +11,10 @@ import (
 )
 
 type Instance struct {
-	Address string
-	Pid int
-	NomadAllocationID string
-	Nomad nomad.Client
+	Address string `json:"-"`
+	Pid int `json:"pid"`
+	NomadAllocationID string `json:"nomad_allocation_id"`
+	Nomad nomad.Client `json:"-"`
 	docker docker.Client
 	nsenter nsenter.Client
 }

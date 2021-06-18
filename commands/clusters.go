@@ -7,7 +7,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	"os"
+	"strings"
 )
 
 type Clusters struct {
@@ -43,7 +43,10 @@ func (r *Registry) BuildListClustersCommand() *cobra.Command {
 				Cluster: cluster,
 				Consul: consul.NewClient(),
 			}
-			return controller.Run()
+			o, cErr := controller.Run()
+			if cErr != nil { return cErr }
+
+			return r.Output(o)
 		},
 	}
 	cmd.Flags().String("cluster", "", "Filter to a specific cluster")
@@ -56,23 +59,34 @@ type ListClustersController struct {
 	Consul consul.Client
 }
 
-func (c *ListClustersController) Run() error {
+func (c *ListClustersController) Run() (ListClustersResponse, error) {
+	resp := ListClustersResponse{
+		ServiceName: c.ServiceName,
+	}
 	e, err := envoy.NewFromServiceName(c.ServiceName)
-	if err != nil { return err }
+	if err != nil { return resp, err }
+
+	resp.Envoy = &e
 
 	stats, gErr := e.Clusters().GetStatistics(c.Cluster)
-	if gErr != nil { return gErr }
+	if gErr != nil { return resp, gErr }
 
-	c.DisplayOutput(stats)
-
-	return nil
+	resp.ClusterStatistics = stats
+	return resp, nil
 }
 
-func (c *ListClustersController) DisplayOutput(clusters map[string]envoy.ClusterStatistics) {
-	for _, stats := range clusters {
-		color.Green("")
-		_, _ = color.New(color.FgGreen).Add(color.Bold).Println(stats.Host)
-		color.Green("------------------------------------------------------------------------------------------------------------")
+type ListClustersResponse struct {
+	ServiceName string `json:"service"`
+	Envoy *envoy.Instance `json:"envoy"`
+	ClusterStatistics map[string]envoy.ClusterStatistics `json:"clusters"`
+}
+
+func (r ListClustersResponse) String() string {
+	o := ""
+	for _, stats := range r.ClusterStatistics {
+		o += Ok("")
+		o += Ok(color.New(color.FgGreen).Add(color.Bold).Sprint(stats.Host))
+		o += Ok("------------------------------------------------------------------------------------------------------------")
 		d := [][]string{
 			{
 				"Outlier: Success Rate", stats.Outlier.SuccessRateAverage,
@@ -99,20 +113,23 @@ func (c *ListClustersController) DisplayOutput(clusters map[string]envoy.Cluster
 				"High Priority - Max Requests", cast.ToString(stats.HighPriority.MaxRequests),
 			},
 		}
-		table := tablewriter.NewWriter(os.Stdout)
+		tableString := strings.Builder{}
+		table := tablewriter.NewWriter(&tableString)
 		table.SetBorder(false)
 		table.SetTablePadding("\t")
 		table.AppendBulk(d)
 		table.SetAlignment(tablewriter.ALIGN_LEFT)
 		table.Render()
+		o += tableString.String()
 
 		if len(stats.Instances) > 0 {
-			color.Green("")
-			color.Green("---------------------")
-			color.Green("- Cluster Instances -")
-			color.Green("---------------------")
+			o += Ok("")
+			o += Ok("---------------------")
+			o += Ok("- Cluster Instances -")
+			o += Ok("---------------------")
 
-			table = tablewriter.NewWriter(os.Stdout)
+			tableString = strings.Builder{}
+			table = tablewriter.NewWriter(&tableString)
 			table.SetHeader([]string{
 				"Host",
 				"Cx Active",
@@ -158,6 +175,8 @@ func (c *ListClustersController) DisplayOutput(clusters map[string]envoy.Cluster
 			table.AppendBulk(d)
 			table.SetAlignment(tablewriter.ALIGN_RIGHT)
 			table.Render()
+			o += tableString.String()
 		}
 	}
+	return o
 }

@@ -3,8 +3,9 @@ package commands
 import (
 	"bonvoy/consul"
 	"bonvoy/envoy"
-	"fmt"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"sort"
 )
 
 type Statistics struct {
@@ -32,7 +33,10 @@ func (r *Registry) BuildStatisticsDumpCommand() *cobra.Command {
 			controller := StatisticsDumpController{
 				ServiceName: args[0],
 			}
-			return controller.Run()
+			o, err := controller.Run()
+			if err != nil { return err }
+
+			return r.Output(o)
 		},
 	}
 	cmd.Flags().BoolP("restart", "r", false, "If passed, will restart all sidecars that have expired certificates")
@@ -44,13 +48,43 @@ type StatisticsDumpController struct {
 	Consul consul.Client
 }
 
-func (c *StatisticsDumpController) Run() error {
+func (c *StatisticsDumpController) Run() (StatisticsDumpResponse, error) {
+	resp := StatisticsDumpResponse{
+		ServiceName: c.ServiceName,
+		Statistics: make(map[string]string),
+	}
 	e, err := envoy.NewFromServiceName(c.ServiceName)
-	if err != nil { return err }
+	if err != nil { return resp, err }
 
-	result, cErr := e.Statistics().Dump()
-	if cErr != nil { return cErr }
+	resp.Envoy = &e
 
-	fmt.Println(result)
-	return nil
+	stats, cErr := e.Statistics().List()
+	if cErr != nil { return resp, cErr }
+
+	for _, stat := range stats {
+		resp.Statistics[stat.Name] = stat.Value
+	}
+	return resp, nil
+}
+
+type StatisticsDumpResponse struct {
+	ServiceName string `json:"service"`
+	Envoy *envoy.Instance `json:"envoy"`
+	Statistics map[string]string `json:"statistics"`
+}
+
+func (r StatisticsDumpResponse) String() string {
+	o := ""
+	o += Ok("Statistics for "+r.ServiceName+" Envoy (PID "+cast.ToString(r.Envoy.Pid)+")")
+	o += Ok("----------------------------------------------------------------------")
+
+	keys := make([]string, 0, len(r.Statistics))
+	for k := range r.Statistics {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		o += Info(k + ": "+r.Statistics[k])
+	}
+	return o
 }

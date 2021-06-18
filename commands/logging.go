@@ -2,7 +2,6 @@ package commands
 
 import (
 	"bonvoy/envoy"
-	"fmt"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
@@ -22,11 +21,11 @@ func (r *Registry) Logging() *Logging {
 	}
 }
 
-// log level
+func GetAvailableLogLevels() []string {
+	return []string{"debug", "info", "warning", "error"}
+}
 
-var (
-	desiredLogLevel string
-)
+// log level
 
 func (r *Registry) BuildSetLogLevelCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -35,39 +34,72 @@ func (r *Registry) BuildSetLogLevelCommand() *cobra.Command {
 		Long:  `Set the Envoy sidecar log level`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			level, fErr := cmd.Flags().GetString("level")
+			if fErr != nil { return fErr }
+
 			controller := SetLogLevelController{
 				ServiceName: args[0],
+				DesiredLogLevel: level,
 			}
-			return controller.Run()
+
+			o, err := controller.Run()
+			if err != nil { return err }
+
+			return r.Output(o)
 		},
 	}
-	cmd.Flags().StringVarP(&desiredLogLevel, "level", "l", "", "Desired log level (debug/info/warning/error")
+	cmd.Flags().StringP("level", "l", "", "Desired log level (debug/info/warning/error")
 	return cmd
 }
 
 type SetLogLevelController struct {
 	ServiceName string
+	DesiredLogLevel string
 }
 
-func (c *SetLogLevelController) Run() error {
-	if desiredLogLevel == "" {
-		desiredLogLevel = c.SelectLogLevel()
+func (c *SetLogLevelController) Run() (SetLogLevelResponse, error) {
+	resp := SetLogLevelResponse{
+		ServiceName: c.ServiceName,
 	}
-	e, err := envoy.NewFromServiceName(c.ServiceName)
-	if err != nil { return err }
+	if c.DesiredLogLevel == "" {
+		d, sErr := c.SelectLogLevel()
+		if sErr != nil { return resp, sErr }
+		c.DesiredLogLevel = d
+	}
+	resp.Level = c.DesiredLogLevel
 
-	return e.Logging().SetLevel(desiredLogLevel)
+	e, err := envoy.NewFromServiceName(c.ServiceName)
+	if err != nil { return resp, err }
+
+	resp.Envoy = &e
+
+	result, sErr := e.Logging().SetLevel(c.DesiredLogLevel)
+	if sErr != nil { return resp, err }
+
+	resp.Output = result
+	return resp, nil
 }
 
-func (c *SetLogLevelController) SelectLogLevel() string {
+type SetLogLevelResponse struct {
+	ServiceName string `json:"service"`
+	Envoy *envoy.Instance `json:"envoy"`
+	Level string `json:"level"`
+	Output string `json:"-"`
+}
+
+func (r SetLogLevelResponse) String() string {
+	o := Ok("Set Log Level for", r.ServiceName)
+	o += Ok("------------------------------------------------")
+	o += Info(r.Output)
+	return o
+}
+
+func (c *SetLogLevelController) SelectLogLevel() (string, error) {
 	prompt := promptui.Select{
 		Label: "Please Select a Log Level",
-		Items: []string{"debug", "info", "warning", "error"},
+		Items: GetAvailableLogLevels(),
 	}
 	_, desired, err := prompt.Run()
-	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
-		return "info"
-	}
-	return desired
+	if err != nil { return "info", err }
+	return desired, nil
 }

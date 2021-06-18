@@ -67,7 +67,7 @@ func (c *Certificates) Get() (CertsResponse, error) {
 type ExpiredCertificate struct {
 	ServiceName string
 	Pid int
-	Envoy *Instance
+	Envoy *Instance `json:"-"`
 	EnvoyExpiration string
 	EnvoyDaysUntilExpiration int
 	ConsulExpiration string
