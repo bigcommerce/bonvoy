@@ -37,3 +37,41 @@ func (c *Client) GetConnectLeafCaCertificate(svc string) (ConnectLeafCaCertifica
 
 	return response, nil
 }
+
+type SidecarService struct {
+	ServiceID string `json:"ServiceID"`
+	Node string `json:"Node"`
+	Address string `json:"Address"`
+	Datacenter string `json:"Datacenter"`
+	ServiceAddress string `json:"ServiceAddress"`
+	ServicePort int `json:"ServicePort"`
+	ServiceProxy ServiceProxy `json:"ServiceProxy"`
+}
+
+type ServiceProxy struct {
+	DestinationServiceName string `json:"DestinationServiceName"`
+	LocalServiceAddress string `json:"LocalServiceAddress"`
+	LocalServicePort int `json:"LocalServicePort"`
+	Upstreams []ServiceUpstream `json:"Upstreams,omitempty"`
+}
+
+type ServiceUpstream struct {
+	DestinationType string `json:"DestinationType"`
+	DestinationName string `json:"DestinationName"`
+	Datacenter string `json:"Datacenter"`
+	LocalBindPort int `json:"LocalBindPort"`
+}
+
+func (c *Client) GetSidecarServices(svc string) ([]SidecarService, error) {
+	var services []SidecarService
+
+	req := c.client.Request()
+	req.Path("/v1/catalog/service/" + svc + "-sidecar-proxy")
+	resp, err := req.Send()
+	if err != nil { return services, nil }
+
+	jErr := resp.JSON(&services)
+	if jErr != nil { return services, jErr }
+
+	return services, nil
+}
