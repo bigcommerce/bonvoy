@@ -4,6 +4,7 @@ import (
 	"bonvoy/docker"
 	"bonvoy/nomad"
 	"bonvoy/nsenter"
+	"github.com/docker/docker/api/types"
 	"github.com/spf13/viper"
 	"os/exec"
 	"strconv"
@@ -27,6 +28,12 @@ func NewFromServiceName(name string) (Instance, error) {
 	dci := docker.NewClient()
 	container, err := dci.GetSidecarContainer(name)
 	if err != nil { return Instance{}, err }
+
+	return NewFromSidecarContainer(container)
+}
+
+func NewFromSidecarContainer(container types.ContainerJSON) (Instance, error) {
+	dci := docker.NewClient()
 
 	return Instance{
 		Address: GetDefaultHost(),
