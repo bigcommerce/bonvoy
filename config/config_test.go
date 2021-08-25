@@ -8,7 +8,7 @@ import (
 func TestConfig_Load(t *testing.T) {
 	Load()
 	eh := viper.GetString("ENVOY_HOST")
-	if eh != "http://0.0.0.0:19001" {
+	if eh != "http://127.0.0.2:19001" {
 		t.Error("Default ENVOY_HOST is incorrect:", eh)
 	}
 	eh = viper.GetString("CONSUL_API_HOST")
