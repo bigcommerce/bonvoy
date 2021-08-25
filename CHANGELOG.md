@@ -2,6 +2,10 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+## 0.3.0
+
+* Add `clusters compare` to compare clusters between Consul and Envoy
+
 ## 0.2.0
 
 * Add `-o json` to output data into a JSON output format
