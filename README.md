@@ -5,6 +5,8 @@
 A simple go CLI tool to perform various tasks against Envoy sidecars in a Consul
 Connect and Nomad environment.
 
+Supports Consul 1.10+, Nomad 1.1.3+, and Envoy 1.18+. 
+
 ## Usage
 
 There are various commands you can run. Usually you are required to pass the

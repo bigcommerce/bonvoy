@@ -2,6 +2,10 @@ The changelog for Bonvoy
 
 ## Pending Release
 
+## 0.3.1
+
+* Adjust envoy default address to 127.0.0.2; Nomad changed this in Nomad 1.1.3
+
 ## 0.3.0
 
 * Add `clusters compare` to compare clusters between Consul and Envoy
