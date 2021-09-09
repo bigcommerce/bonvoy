@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/Devatoria/go-nsenter v0.0.0-20170612091819-0aa1e5f7748c
-	github.com/containerd/containerd v1.5.2 // indirect
+	github.com/containerd/containerd v1.5.4 // indirect
 	github.com/docker/docker v20.10.7+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/fatih/color v1.12.0
