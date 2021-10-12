@@ -5,9 +5,8 @@ orbs:
 
 executors:
   go:
-    working_directory: /go/src/github.com/bigcommerce/bonvoy
     docker:
-      - image: circleci/golang:1.16
+      - image: cimg/go:1.17
         environment:
           DOCKER_API_VERSION: 1.39
 
