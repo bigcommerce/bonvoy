@@ -1,8 +1,15 @@
 version: 2.1
 
+#################################################################################
+# Orbs
+#################################################################################
 orbs:
   ci: bigcommerce/internal@volatile
+  code-climate: bigcommerce/internal-codeclimate@volatile
 
+#################################################################################
+# Executors
+#################################################################################
 executors:
   go:
     docker:
@@ -10,27 +17,43 @@ executors:
         environment:
           DOCKER_API_VERSION: 1.39
 
+#################################################################################
+# Jobs
+#################################################################################
+job_defaults: &job_defaults
+  executor: go
+  working_directory: /home/circleci/go/src/github.com/bigcommerce/bonvoy
+
 jobs:
   test-unit:
-    executor: go
+    <<: *job_defaults
     steps:
       - ci/pre-setup
+      - code-climate/setup
       - run: make deps test-unit
+      - code-climate/after-build:
+          coverage-format: 'gocov'
   test:
-    executor: go
+    <<: *job_defaults
     steps:
       - ci/pre-setup
       - run: make deps test
   build:
-    executor: go
+    <<: *job_defaults
     steps:
       - ci/pre-setup
       - run: make deps build
 
+#################################################################################
+# Workflows
+#################################################################################
 workflows:
   version: 2
   full:
     jobs:
       - test-unit
       - test
-      - build
+      - build:
+          requires:
+            - test
+            - test-unit
