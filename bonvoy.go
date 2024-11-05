@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"bonvoy/commands"
 	"bonvoy/config"
-	"os"
 )
 
 func main() {
