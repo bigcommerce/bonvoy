@@ -13,7 +13,7 @@ orbs:
 executors:
   go:
     docker:
-      - image: cimg/go:1.17
+      - image: cimg/go:1.23
         environment:
           DOCKER_API_VERSION: 1.39
 

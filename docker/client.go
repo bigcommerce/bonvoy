@@ -3,6 +3,9 @@ package docker
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	dockerClient "github.com/docker/docker/client"
@@ -25,17 +28,19 @@ func NewClient() Client {
 
 func (c *Client) GetEnvoyPid(name string) (int, error) {
 	container, err := c.GetSidecarContainer(name)
-	if err != nil { return 0, err }
+	if err != nil {
+		return 0, err
+	}
 
 	return container.State.Pid, nil
 }
 
 func (c *Client) GetSidecarContainer(serviceName string) (types.ContainerJSON, error) {
 	filter := filters.NewArgs()
-	filter.Add("name", "connect-proxy-" + serviceName)
+	filter.Add("name", "connect-proxy-"+serviceName)
 
 	containers, err := c.cli.ContainerList(context.Background(), types.ContainerListOptions{
-		All: false,
+		All:     false,
 		Filters: filter,
 	})
 	if err != nil {
@@ -73,10 +78,17 @@ func (c *Client) GetSidecarContainer(serviceName string) (types.ContainerJSON, e
 	return container, nil
 }
 
+var defaultContainerPageSize = 500
+
 func (c *Client) SelectDesiredContainer(names []string) (string, error) {
+	size, err := strconv.Atoi(os.Getenv("BONVOY_MAX_CONTAINER_PAGE_SIZE"))
+	if err != nil {
+		size = defaultContainerPageSize
+	}
 	prompt := promptui.Select{
 		Label: "Please Select Sidecar Container",
 		Items: names,
+		Size:  size,
 	}
 	_, desiredName, err := prompt.Run()
 	if err != nil {

@@ -1,4 +1,7 @@
 GOBIN := ${GOPATH}/bin
+GOCMD := go
+GOBUILD := CGO_ENABLED=0 $(GOCMD) build
+GOCLEAN := $(GOCMD) clean
 PATH := ${GOBIN}:${PATH}
 
 export PATH
@@ -7,20 +10,28 @@ OBJECT=bonvoy
 default: deps build
 
 clean:
-	@rm ${OBJECT}
+	$(GOCLEAN)
+	rm -f $(OBJECT)
 
 build:
-	@go build -v -o ${OBJECT}
+	$(GOBUILD) -v -o ${OBJECT}
 
 deps:
-	@go mod tidy
-	@go get -u github.com/rakyll/gotest
+	$(GOCMD) mod tidy
+	$(GOCMD) install go.uber.org/mock/mockgen@latest
+	$(GOCMD) install github.com/mfridman/tparse@latest
+
+generate: deps
+	$(GOCMD) generate -v ./...
+
+lint:
+	$(GOLANGCI_LINT) run
 
 test:
-	@gotest -v $$(go list ./... | grep -v vendor/) -tags=integration
+	$(GOCMD) test -v -tags=integration $$(go list ./... | grep -v vendor/)
 
 test-unit:
-	@gotest -v -coverprofile=c.out $$(go list ./... | grep -v vendor/)
+	$(GOCMD) test -v -coverprofile=c.out $$(go list ./... | grep -v vendor/)
 
 build-linux:
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o ${OBJECT}-linux-amd64
+	GOOS=linux GOARCH=amd64 $(GOBUILD) -v -o ${OBJECT}-linux-amd64
