@@ -4,7 +4,7 @@ set -xeou pipefail
 
 cd /opt/bonvoy || exit 1
 
-export DOCKER_API_VERSION=1.39
+export DOCKER_API_VERSION=1.40
 
 go mod tidy
 go build bonvoy

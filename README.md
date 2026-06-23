@@ -5,7 +5,7 @@
 A simple go CLI tool to perform various tasks against Envoy sidecars in a Consul
 Connect and Nomad environment.
 
-Supports Consul 1.10+, Nomad 1.1.3+, and Envoy 1.18+. Requires DOCKER_API_VERSION 1.39.
+Supports Consul 1.10+, Nomad 1.1.3+, and Envoy 1.18+. Requires DOCKER_API_VERSION 1.40.
 
 ## Usage
 

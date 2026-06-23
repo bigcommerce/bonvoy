@@ -3,6 +3,6 @@
 set -eo pipefail
 unset NOMAD_ADDR CONSUL_API_HOST ENVOY_HOST
 
-export DOCKER_API_VERSION=1.39
+export DOCKER_API_VERSION=1.40
 
 gotest -v $(go list ./... | grep -v vendor/)
