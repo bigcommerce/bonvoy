@@ -1,5 +1,6 @@
 tmp
 bonvoy
+bin/
 dist/
 .idea/
 *.iml

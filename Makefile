@@ -5,16 +5,18 @@ GOCLEAN := $(GOCMD) clean
 PATH := ${GOBIN}:${PATH}
 
 export PATH
-OBJECT=bonvoy
+BINARY_NAME=./bin/bonvoy
 
 default: deps build
 
 clean:
 	$(GOCLEAN)
-	rm -f $(OBJECT)
+	rm -f $(BINARY_NAME)
+	rm -f $(BINARY_NAME)-linux-amd64
 
 build:
-	$(GOBUILD) -v -o ${OBJECT}
+	mkdir -p bin
+	$(GOBUILD) -v -o $(BINARY_NAME) .
 
 deps:
 	$(GOCMD) mod tidy
@@ -34,4 +36,4 @@ test-unit:
 	$(GOCMD) test -v -coverprofile=c.out $$(go list ./... | grep -v vendor/)
 
 build-linux:
-	GOOS=linux GOARCH=amd64 $(GOBUILD) -v -o ${OBJECT}-linux-amd64
+	GOOS=linux GOARCH=amd64 $(GOBUILD) -v -o $(BINARY_NAME)-linux-amd64

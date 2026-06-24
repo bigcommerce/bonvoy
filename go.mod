@@ -1,6 +1,6 @@
 module bonvoy
 
-go 1.23
+go 1.26
 
 require (
 	github.com/Devatoria/go-nsenter v0.0.0-20170612091819-0aa1e5f7748c

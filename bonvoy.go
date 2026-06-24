@@ -8,7 +8,9 @@ import (
 )
 
 func main() {
-	_ = os.Setenv("DOCKER_API_VERSION", "1.39")
+	if os.Getenv("DOCKER_API_VERSION") == "" {
+		_ = os.Setenv("DOCKER_API_VERSION", "1.40")
+	}
 	config.Load()
 	commands.NewRegistry().Init()
 }

@@ -62,7 +62,7 @@ func (c *Client) GetSidecarContainer(serviceName string) (types.ContainerJSON, e
 	} else if len(containerNames) == 1 {
 		desiredName = containerNames[0]
 	} else {
-		return types.ContainerJSON{}, fmt.Errorf("No sidecar found for name: " + serviceName)
+		return types.ContainerJSON{}, fmt.Errorf("No sidecar found for name: %s", serviceName)
 	}
 
 	var desiredId = ""
